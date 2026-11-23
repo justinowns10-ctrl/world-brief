@@ -339,3 +339,48 @@ def test_quote_comes_from_the_right_part_of_a_run_on_passage():
               "the clean-up would take many years and cost far more than the territory can afford on its own.")
     quote = locate("Heavy metals, explosive residues and asbestos have made the air and soil dangerous.", run_on, 0.6)
     assert quote is not None and "asbestos" in quote and len(quote.split()) <= 45
+
+
+# ================================================================= 5. errors seen in the second real run
+
+def test_a_denial_worded_differently_is_not_a_dropped_negation():
+    """Observed: 'failed to reach a pact' was removed because its source said 'ended without a pact'."""
+    source = "The summit ended without a climate pact after two extra days of talks."
+    claim = "Negotiators failed to reach a climate pact at the summit."
+    result = validate_event(draft((claim, ["A1"], source)), [passage("A1", source)], Checker())
+    assert [c["text"] for c in result["claims"]] == [claim]
+    # A claim with no negation at all is still removed.
+    claim = "Negotiators reached a climate pact at the summit."
+    assert validate_event(draft((claim, ["A1"], source)), [passage("A1", source)], Checker())["claims"] == []
+
+
+def test_distances_and_different_quantities_are_not_conflicting_figures():
+    """Observed: '24 killed' was called in conflict with '50km west of the capital' and with '30 missing'."""
+    passages = [passage("A1", "At least 24 people were killed in the factory fire."),
+                passage("A2", "The fire broke out at a factory about 50km west of the capital, and about 30 people are still missing.")]
+    claim = "At least 24 people were killed in the factory fire."
+    kept = validate_event(draft((claim, ["A1"], claim)), passages, Checker())
+    assert kept["claims"][0]["support"] == "supported" and kept["conflict"] is False
+    # A real disagreement about the same quantity is still caught.
+    passages.append(passage("A3", "At least three people were killed in the factory fire, officials said."))
+    passages.append(passage("A4", "At least 3 people were killed in the factory fire."))
+    disputed = validate_event(draft((claim, ["A1"], claim)), passages, Checker())
+    assert disputed["conflict"] is True and "3" in disputed["conflict_note"]
+
+
+def test_headline_attribution_such_as_experts_find_counts():
+    source = "The bombardment has created a toxic wasteland, experts find."
+    claim = "The bombardment has created a toxic wasteland."
+    flagged = validate_event(draft((claim, ["A1"], source)), [passage("A1", source)], Checker())["claims"][0]
+    assert flagged["support"] == "partial" and "attributes" in flagged["note"]
+
+
+def test_global_summit_is_filed_under_its_topic_not_its_host_or_loudest_participant():
+    cluster = [
+        art("COP31 ends without climate pact as UN chief warns of no ambiguity in the science",
+            "EU member states objected; Russia and the United States resisted.", "a"),
+        art("Pacific island nations despair at summit failure", "Delegates in Antalya, Turkey, left without a deal.", "b"),
+        art("Longest-ever UN climate talks end with no deal", "France and Germany blamed producers.", "c"),
+        art("Fossil fuel wording sinks final text", "Australia will host next year.", "d"),
+    ]
+    assert decide_section(cluster, "europe")[0] == "energy"

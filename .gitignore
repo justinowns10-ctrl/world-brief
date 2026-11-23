@@ -63,3 +63,10 @@ world-brief*.zip
 # ---- OS ---------------------------------------------------------------------
 .DS_Store
 Thumbs.db
+
+# Output the Windows script used to write straight into reports/ (now goes to benchmarks/)
+reports/real-run*
+reports/real-briefing*
+reports/feeds.*
+reports/lmstudio-models.txt
+benchmarks/*/worldbrief.db

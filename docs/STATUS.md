@@ -26,7 +26,7 @@ Driven by what the first real briefing got wrong (listed below) and by a claim-b
 
 | Problem observed | Change | Checked how |
 |---|---|---|
-| Wrong sections | Region is looked up from place names (`geo.py`, about 200 countries and blocs, with nationalities and some cities). The model only chooses region versus topic, and a topic needs support in the headlines. Countries come from the reports, not the model. | Re-run of the rules over the first run's articles: all twelve stories land where a reader would expect. Tests in `test_editorial.py`. |
+| Wrong sections | Region is looked up from place names (`geo.py`, 177 countries and blocs, with nationalities and some cities). The model only chooses region versus topic, and a topic needs support in the headlines. Countries come from the reports, not the model. | Re-run of the rules over the first run's articles: all twelve stories land where a reader would expect. Tests in `test_editorial.py`. |
 | Opinion as fact | Articles are sorted by address and headline into news, opinion, analysis, live and sport. Only news is a source of claims. | On the first run's 97 articles: 75 news, 10 analysis, 6 sport, 4 live, 2 opinion. Both opinion columns are excluded. |
 | Dropped attribution, unattributed judgement, forecasts | Claims are marked partly confirmed when the source attributes and the claim does not, or when a judgement word has no owner. Each claim carries `nature`: event, statement or forecast. | Tests. |
 | One event split into several stories | Clustering now weights names, acronyms and countries, uses average-link grouping, and joins reports naming the same coded event (COP31, G20). | On the first run's articles: 85 usable articles form 52 events, 12 of them with two or more independent sources, against 3 before. The largest story of the day, missed entirely by the first briefing, is now one seven-report event. |
@@ -35,7 +35,34 @@ Driven by what the first real briefing got wrong (listed below) and by a claim-b
 
 Backend suite: **81 tests pass.**
 
-**Not yet verified:** these changes have not been through a second real run. The clustering and section results above come from re-running the deterministic stages on the first run's stored articles, which is real data but the same day the rules were tuned on. Whether the claim rules behave on fresh model output is unknown.
+### Second real run (same day, 05:56, same model and settings)
+
+`benchmarks/2026-11-23-0556/MEASUREMENTS.md`. Same inference configuration; 81 tests passed on Windows first.
+
+| | First run | Second run |
+|---|---|---|
+| Articles used | 97, all kinds | 89 (78 news, 11 analysis as related reading); 12 opinion, live and sport items set aside |
+| Events | 74 | 53 |
+| Stories with two or more independent sources | 3 of 12 | 6 of 12 |
+| Reports linked from the 12 stories | 18 | 31 |
+| Sections with a story | 5, three of them wrong | 8, with every region covered |
+| Stories sourced from opinion | 1 | 0 |
+| Claims: published / partly confirmed / removed | 26 / 5 / 3 | 30 / 7 / 1 |
+| Wall time | 117 s | 116 s |
+
+Read against the first run's errors: Gaza is under Middle East, Indonesia under South and Southeast Asia, no opinion column is a source, no United States domestic story is in the top twelve.
+
+What the second run still got wrong, found by reading it:
+
+1. **The climate summit was filed under Europe**, and by taking a Europe slot it helped crowd out the day's largest story (a seven-report naval attack), which did not appear at all.
+2. **One true claim was removed** because its source said "without" and the claim said "failed".
+3. **False "conflicting figures"**: a death toll was compared with a distance ("50km") and with a count of missing people.
+4. **One attribution was still dropped** ("..., experts find" in a headline).
+5. Two reports of strikes near the same city on the same day became two stories. They may be two events; not checked.
+
+Items 1 to 4 were fixed after this run and have tests (`test_editorial.py`, section 5), **but no real run has happened since**, so those four fixes are unverified on real output. The second run's claims have not been reviewed claim by claim the way the first run's were.
+
+The comparison is not a controlled experiment: the second run saw a slightly different set of articles (the feeds had moved on by 20 minutes), and the rules were written after reading the first run.
 
 Known weak points of the new rules: the article sorter is conservative (a news report with a question for a headline is treated as analysis, and feature sections are excluded wholesale); the place table has no people and few cities; topic vocabulary is a short word list; "may" the month still reads as a hedge.
 

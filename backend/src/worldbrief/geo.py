@@ -290,7 +290,7 @@ _TOPIC_WORDS = {
     "technology": r"artificial intelligence|superintelligence|chips?|semiconductors?|cyber\w*|software|hack(?:ed|ers?)?|"
                   r"data breach|robots?|quantum|tech (?:giants?|firms?|stocks?)|social media|smartphones?|algorithm\w*|datacent(?:er|re)s?",
     "energy": r"oil|gas|pipelines?|nuclear (?:plant|power|reactor)s?|power grid|energy grid|electricity|blackouts?|"
-              r"renewables?|solar|wind farms?|coal|energy|climate (?:talks|summit|deal|conference)|emissions|fossil fuels?",
+              r"renewables?|solar|wind farms?|coal|energy|climate|emissions|fossil fuels?",
     "economics": r"tariffs?|trade (?:deal|war|talks|pact)|inflation|central bank|interest rates?|recession|"
                  r"debt|currency|stock markets?|markets|budget|economy|economic|exports?|imports?|bailout|shares",
     "humanitarian": r"famine|refugees?|displaced|displacement|humanitarian|aid (?:convoy|agenc\w+|workers?|deliver\w+)|"
@@ -338,7 +338,7 @@ def decide_section(articles: list[dict], model_section: str | None) -> tuple[str
         # regions (a climate summit, a trade deal between continents) belongs to the topic.
         spanned = {COUNTRY_SECTION[c] for c in place["scores"]}
         best_topic = max(topics, key=topics.get)
-        if len(spanned) >= 2 and topics[best_topic] * 2 >= len(articles) and topics[best_topic] > 0:
+        if len(spanned) >= 2 and topics[best_topic] * 3 >= len(articles) and topics[best_topic] > 0:
             return best_topic, "spans regions and the headlines describe it as this topic"
         if model_section and model_section != region:
             return region, f"placed by geography (the model said '{model_section}')"

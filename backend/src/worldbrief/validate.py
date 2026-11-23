@@ -37,7 +37,8 @@ from .text import STOPWORDS, clean_text, looks_like_instruction, normalize, sent
 
 log = logging.getLogger("worldbrief.validate")
 
-_NUMBER = re.compile(r"\d+(?:[.,]\d+)*")
+# A number standing on its own. "50km" is a distance, not a count, and is left out.
+_NUMBER = re.compile(r"(?<![\w.])\d+(?:[.,]\d+)*(?![A-Za-z\d])")
 _NAME = re.compile(r"\b[A-Z][a-zA-Z]{2,}\b")
 _WORD = re.compile(r"[a-z]+")
 _RANK = {"supported": 0, "partial": 1, "unsupported": 2, "contradicted": 2}
@@ -73,7 +74,7 @@ for _a, _b in _OPPOSITES:
 # The source says who said it. A claim that keeps none of these states someone's account as fact.
 ATTRIBUTION = frozenset(
     "said says say saying according told tells stated states announced announces reported reports report "
-    "finds found warned warns argued argues claimed claims claiming alleged alleges accused accuses believes "
+    "find finds found show shows showed warn warned warns argued argues claimed claims claiming alleged alleges accused accuses believes "
     "described describes called calls insisted insists denied denies acknowledged admitted confirmed confirms "
     "estimated estimates suggested suggests predicted predicts blamed blames condemned criticised criticized "
     "slams slammed decries decried brands branded urged urges vowed vows promised promises".split()
@@ -222,12 +223,17 @@ def qualifiers_dropped(claim: str, passage_sentence: str) -> tuple[set[str], set
     """Negations and hedges that are in the source sentence but not in the claim."""
     in_claim = set(_WORD.findall(claim.lower()))
     in_source = set(_WORD.findall(passage_sentence.lower()))
+    negations = (in_source & NEGATIONS) - in_claim
+    if in_claim & NEGATIONS:
+        # The claim carries a negation of its own ("failed to reach a pact" for "ended without a
+        # pact"). Different wording of the same denial is not a dropped one.
+        negations = set()
     hedges = (in_source & HEDGES) - in_claim
     if in_claim & ATTRIBUTION:
         # "X described the bill as lazy" already says whose view it is; the source's
         # "claimed"/"claiming" is the same information, not a lost qualifier.
         hedges -= {"claimed", "claims", "claiming", "alleged", "allegedly", "reportedly"}
-    return (in_source & NEGATIONS) - in_claim, hedges
+    return negations, hedges
 
 
 def reversed_terms(claim: str, passage_sentence: str) -> set[str]:
@@ -339,7 +345,7 @@ def conflicting_figures(claim: str, passages: list[dict], cited_refs: set[str]) 
             if not theirs or theirs & claim_numbers:
                 continue
             overlap = len(claim_words & content_tokens(sentence)) / len(claim_words)
-            if overlap >= 0.5:
+            if overlap >= 0.7:
                 where = "the same report" if p["ref"] in cited_refs else "another report"
                 return (f"{', '.join(sorted(claim_numbers))} here, but {', '.join(sorted(theirs))} in {where} "
                         f"({p['ref']})")
@@ -441,8 +447,9 @@ def _screen_claim(text: str, evidence: list[dict]) -> tuple[str | None, str | No
     if negated:
         return "unsupported", "the cited passage negates this (" + ", ".join(sorted(negated)) + ")", []
     claim_words = set(_WORD.findall(text.lower()))
-    added = (claim_words & NEGATIONS) - set().union(*(set(_WORD.findall(e["quote"].lower())) for e in evidence))
-    if added:
+    source_words = set().union(*(set(_WORD.findall(e["quote"].lower())) for e in evidence))
+    added = (claim_words & NEGATIONS) - source_words
+    if added and not source_words & NEGATIONS:
         return "unsupported", "adds a negation the cited passage does not have (" + ", ".join(sorted(added)) + ")", []
     if flipped:
         return "contradicted", "the cited passage says the opposite (" + ", ".join(sorted(flipped)) + ")", []
