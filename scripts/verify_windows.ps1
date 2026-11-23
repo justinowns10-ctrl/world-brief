@@ -18,9 +18,20 @@ function Record($name, $code) {
 
 Set-Location (Join-Path $root "backend")
 
-# 1. Environment
-python --version 2>&1 | Out-File $summary -Append -Encoding utf8
-if (-not (Test-Path ".venv")) { python -m venv .venv }
+# 1. Environment: find a Python 3.11+ (PATH, the py launcher, then Miniforge).
+$python = $null
+foreach ($candidate in @("python", "py", (Join-Path $env:USERPROFILE "miniforge3\python.exe"))) {
+    try {
+        $version = & $candidate -c "import sys; print('%d.%d' % sys.version_info[:2])" 2>$null
+        if ($LASTEXITCODE -eq 0 -and [version]$version -ge [version]"3.11") { $python = $candidate; break }
+    } catch { }
+}
+if (-not $python) {
+    "No Python 3.11 or newer was found (tried python, py, Miniforge)." | Out-File $summary -Append -Encoding utf8
+} else {
+    "Python: $python ($version)" | Out-File $summary -Append -Encoding utf8
+    if (-not (Test-Path ".venv\Scripts\python.exe")) { & $python -m venv .venv }
+}
 & .\.venv\Scripts\python.exe -m pip install --quiet -e ".[dev,measure]" 2>&1 | Out-File (Join-Path $reports "windows-pip.txt") -Encoding utf8
 Record "install" $LASTEXITCODE
 
