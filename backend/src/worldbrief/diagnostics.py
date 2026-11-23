@@ -231,4 +231,62 @@ def write_report(report: dict, path: Path) -> Path:
         lines += ["### Partly confirmed claims", ""] + [f"- {a['claim_text']} ({a['reason']})" for a in val["partly_confirmed"]] + [""]
     lines += ["## Run log", ""] + [f"- {e['at']} {e['level']} {e['stage']}: {e['message']}" for e in report["log"]]
     md.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    write_measurements(report, path.with_name("MEASUREMENTS.md"))
     return md
+
+
+def write_measurements(report: dict, path: Path) -> Path:
+    """A numbers-only summary of a run: no headlines, claims or source text, so
+    it can be kept in version control when the run's content cannot."""
+    r, inf, res, val = report["run"], report["inference"], report["resources"], report["validation"]
+    st = r["stats"]
+    rec = ((report["model"].get("lmstudio") or {}).get("record")) or {}
+    quant = rec.get("quantization")
+    if isinstance(quant, dict):
+        quant = f"{quant.get('name')}, {quant.get('bits_per_weight')} bits per weight"
+    loaded = [i.get("config", {}) for i in rec.get("loaded_instances") or []]
+    load = (f"context {loaded[0].get('context_length')} of {rec.get('max_context_length')}, "
+            f"parallel slots {loaded[0].get('parallel')}, flash attention {loaded[0].get('flash_attention')}"
+            if loaded else "not reported")
+    lm = report["runtime_settings"]["lmstudio"]
+    g, sysm = res.get("gpu", {}), res.get("system", {})
+    rows = [
+        ("Host", f"{report['environment']['os']}, Python {report['environment']['python']}"),
+        ("Pipeline version", report["pipeline_version"]),
+        ("Model", f"`{report['model']['id']}` ({rec.get('params_string', '?')}, {quant or 'quantization not reported'}, "
+                  f"{rec.get('format', '?')})" + ("" if report["model"]["is_real_model"] else " NOT A LANGUAGE MODEL")),
+        ("Load settings", load),
+        ("Backend settings", f"temperature {lm['temperature']}, max output tokens {lm['max_output_tokens']}, "
+                             f"prompt cap {lm['max_prompt_chars']} characters, one request at a time"),
+        ("Embedding model", report["model"]["embedding_model"] or "none"),
+        ("Feeds", f"{st.get('feeds_ok')} read, {st.get('feeds_failed')} failed, {st.get('articles_new')} new articles, "
+                  f"{st.get('articles_considered')} in the window"),
+        ("Article kinds", str(st.get("article_kinds"))),
+        ("Events", f"{st.get('clusters')} clusters ({st.get('clustering')}); {st.get('events')}"),
+        ("Wall time", f"{r['wall_seconds']} s"),
+        ("Inference", f"{inf['calls']} calls, {inf['seconds_total']} s"),
+        ("GPU", f"{g.get('name')}: peak {g.get('memory_used_mib_peak')} of {g.get('memory_total_mib')} MiB "
+                f"(start {g.get('memory_used_mib_start')}), load peak {g.get('utilization_pct_peak')} %, "
+                f"{g.get('temperature_c_peak')} C" if g.get("memory_used_mib_peak") is not None else "not recorded"),
+        ("System memory", f"peak {sysm.get('memory_used_mib_peak')} of {sysm.get('memory_total_mib')} MiB "
+                          f"(start {sysm.get('memory_used_mib_start')}), CPU peak {sysm.get('cpu_pct_peak')} %"
+                          if sysm.get("available") else "not recorded"),
+        ("Claims", f"{val['claims_checked']} drafted, {val['claims_published']} published "
+                   f"({len(val['partly_confirmed'])} partly confirmed), {val['claims_removed']} removed; "
+                   f"verdicts {val['verdicts']}"),
+        ("Stories", f"{st.get('stories')}: {val['stories_by_status']}"),
+        ("State", r["state"] + (": " + "; ".join(report["publication"]["reasons"])
+                                if report.get("publication") and report["publication"].get("reasons") else "")),
+    ]
+    lines = [f"# Measurements: run for {r['briefing_id']}, started {r['started_at']}", "",
+             "Numbers only. The briefing, claims, run log and source records are kept beside this file on the "
+             "machine that ran it and are not in Git.", "", "| | |", "|---|---|"]
+    lines += [f"| {k} | {v} |" for k, v in rows]
+    lines += ["", "| Task | Calls | Failed | Mean s | Max s | Prompt tokens | Output tokens | Output tokens/s |",
+              "|---|---|---|---|---|---|---|---|"]
+    for task, t in inf["by_task"].items():
+        lines.append(f"| {task} | {t['calls']} | {t['failed']} | {t['seconds_mean']} | {t['seconds_max']} | "
+                     f"{t['prompt_tokens']} | {t['completion_tokens']} | {t.get('completion_tokens_per_second', '')} |")
+    lines += ["", "Resource figures are for the whole machine and include anything else that was running.", ""]
+    path.write_text("\n".join(lines), encoding="utf-8")
+    return path

@@ -39,20 +39,29 @@ Record "install" $LASTEXITCODE
 & .\.venv\Scripts\python.exe -m pytest -v 2>&1 | Out-File (Join-Path $reports "windows-pytest.txt") -Encoding utf8
 Record "backend tests" $LASTEXITCODE
 
+# Each real run is kept as a benchmark in its own folder. Measurements are tracked in Git;
+# the news content the run produced is ignored (see .gitignore).
+$bench = Join-Path $root ("benchmarks\" + (Get-Date -Format "yyyy-MM-dd-HHmm"))
+New-Item -ItemType Directory -Force -Path $bench | Out-Null
+
 # 3. Live feeds
 if (-not (Test-Path "config.toml")) { Copy-Item "config.example.toml" "config.toml" }
-& .\.venv\Scripts\python.exe -m worldbrief check-feeds --report (Join-Path $reports "feeds.json") 2>&1 | Out-File (Join-Path $reports "feeds.txt") -Encoding utf8
+& .\.venv\Scripts\python.exe -m worldbrief check-feeds --report (Join-Path $bench "feeds.json") 2>&1 | Out-File (Join-Path $bench "feeds.txt") -Encoding utf8
 Record "live feeds" $LASTEXITCODE
 
 # 4. LM Studio reachable, then one real run with measurements.
 #    Needs lmstudio.chat_model set in backend\config.toml and LM Studio's server started.
-& .\.venv\Scripts\python.exe -m worldbrief check-lm 2>&1 | Out-File (Join-Path $reports "lmstudio-models.txt") -Encoding utf8
+& .\.venv\Scripts\python.exe -m worldbrief check-lm 2>&1 | Out-File (Join-Path $bench "lmstudio-models.txt") -Encoding utf8
 Record "LM Studio reachable" $LASTEXITCODE
 if ($LASTEXITCODE -eq 0) {
-    & .\.venv\Scripts\python.exe -m worldbrief run --report (Join-Path $reports "real-run.json") 2>&1 | Out-File (Join-Path $reports "real-run-console.txt") -Encoding utf8
+    & .\.venv\Scripts\python.exe -m worldbrief run --report (Join-Path $bench "real-run.json") 2>&1 | Out-File (Join-Path $bench "real-run-console.txt") -Encoding utf8
     Record "real run" $LASTEXITCODE
-    & .\.venv\Scripts\python.exe -m worldbrief status 2>&1 | Out-File (Join-Path $reports "real-run-status.txt") -Encoding utf8
+    & .\.venv\Scripts\python.exe -m worldbrief status 2>&1 | Out-File (Join-Path $bench "real-run-status.txt") -Encoding utf8
+    Copy-Item "config.toml" (Join-Path $bench "config-used.toml")
+    Copy-Item "data\worldbrief.db" (Join-Path $bench "worldbrief.db") -ErrorAction SilentlyContinue
+    Get-ChildItem "data\briefings\briefing-*.json" | Sort-Object LastWriteTime | Select-Object -Last 1 | Copy-Item -Destination $bench
 }
+"Benchmark folder: $bench" | Out-File $summary -Append -Encoding utf8
 
 # 5. Android build, complete log kept. Needs Android Studio's JDK or JAVA_HOME (17 or newer).
 Set-Location (Join-Path $root "android")
