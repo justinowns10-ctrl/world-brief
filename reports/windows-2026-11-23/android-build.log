@@ -1,0 +1,11 @@
+﻿gradlew.bat :  
+At C:\Users\justi\Documents\Projects\world-brief\scripts\verify_windows.ps1:59 char:1
++ & .\gradlew.bat --no-daemon --stacktrace testDebugUnitTest assembleDe ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH. 
+ 
+Please set the JAVA_HOME variable in your environment to match the 
+location of your Java installation. 

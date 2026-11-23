@@ -1,0 +1,7 @@
+﻿bbc-world        OK: 35 usable of 35 entries, newest 2026-11-23T08:53:01Z, typical excerpt 115 characters, format rss20
+aljazeera        OK: 25 usable of 25 entries, newest 2026-11-23T10:22:34Z, typical excerpt 110 characters, format rss20
+dw-world         OK: 11 usable of 11 entries, newest 2026-11-22T08:45:00Z, typical excerpt 181 characters, format rss10
+france24         OK: 24 usable of 24 entries, newest 2026-11-23T10:34:43Z, typical excerpt 329 characters, format rss20
+un-news          OK: 30 usable of 30 entries, newest 2026-11-22T12:00:00Z, typical excerpt 246 characters, format rss20
+guardian-world   OK: 45 usable of 45 entries, newest 2026-11-23T10:24:58Z, typical excerpt 637 characters, format rss20
+Report written: C:\Users\justi\Documents\Projects\world-brief\reports\feeds.json

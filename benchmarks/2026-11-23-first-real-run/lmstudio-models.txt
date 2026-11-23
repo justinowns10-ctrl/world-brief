@@ -1,0 +1,4 @@
+﻿LM Studio is reachable at http://127.0.0.1:1234/v1. Models it reports:
+   openai/gpt-oss-20b
+   ibm/granite-4-h-tiny
+   text-embedding-nomic-embed-text-v1.5

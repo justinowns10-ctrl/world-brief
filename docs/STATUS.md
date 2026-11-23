@@ -1,6 +1,6 @@
 # Status
 
-Last updated 2026-11-23, after Technical Review Directive 01 and ChatGPT's review (WB-001 to WB-007).
+Last updated 2026-11-23, after the first run on the Windows desktop (Review Directive 02).
 Git: `baseline-0.1` is the code as first delivered; this work is on branch `directive-01`.
 
 Three levels are used and kept apart:
@@ -9,15 +9,39 @@ Three levels are used and kept apart:
 - **Implemented**: written, not yet run in a way that proves it.
 - **Planned**: not written.
 
-## Not done: the three results the directive asked for first
+## First run on the Windows desktop (2026-11-23, 05:35 local)
 
-| Required result | State | Why | What produces it |
-|---|---|---|---|
-| Android Gradle build result and log | **Not obtained** | The environment this was written in cannot download Android libraries, has no GitHub repository attached, and was refused access to the desktop's folders. | `scripts\verify_windows.ps1` on the desktop, or push to GitHub (CI keeps the full log as `android-build-log`). |
-| Real LM Studio model test | **Not obtained** | LM Studio runs on the desktop only. | `python -m worldbrief run --report ..\reports\real-run.json` (the script does this). The report records model id, quantization, load settings, per-call timings, tokens, peak GPU and system memory, and every removed claim. |
-| Windows execution | **Not obtained** | Same. | The script, or the `windows-latest` CI job for the test suite. |
+`run_verify.bat` was run on the desktop. Test and build output is in `reports/windows-2026-11-23/`; the real run is in `benchmarks/2026-11-23-first-real-run/`.
 
-The Android client is **not complete** and must not be described as such until an APK builds.
+| Step | Result | Evidence |
+|---|---|---|
+| Python found, packages installed | OK. Python 3.14.10 from Miniforge. | `windows-summary.txt`, `windows-pip.txt` |
+| Backend test suite on Windows | **60 passed** | `windows-pytest.txt` |
+| Six starter feeds, live | **All six OK**: 170 entries, every one usable. | `benchmarks/.../feeds.json` |
+| LM Studio reachable | OK. LM Studio 0.4.28. | `benchmarks/.../lmstudio-models.txt` |
+| Real run, real feeds, real model | **Published, state `complete`**: 12 stories from 97 articles. | `benchmarks/2026-11-23-first-real-run/MEASUREMENTS.md` |
+| Android build | **Failed before starting**: no Java on the machine (`JAVA_HOME is not set and no 'java' command could be found`). Android Studio and the Android SDK are not installed either. | `android-build.log` |
+
+Real-run measurements:
+
+- Model `openai/gpt-oss-20b`, quantization MXFP4 (4 bits per weight), GGUF, 12.1 GB. Loaded with context 8192, 4 parallel slots, flash attention on. The backend sent one request at a time, output capped at 2000 tokens.
+- 26 model calls, 90.0 s of inference, 117.2 s wall time. Ranking 12.0 s per call, drafting 2.3 s, checking 3.2 s. About 120 output tokens per second.
+- Peak GPU memory 13,591 of 16,303 MiB (13,504 before the run, so the model was already loaded), GPU load peak 63 %, 60 C. System memory peak 33.7 of 97.7 GB. Whole-machine figures.
+- Validation: 29 claims drafted, 21 supported, 5 partly confirmed, 3 removed. Stories: 2 verified, 9 preliminary, 1 disputed.
+
+Not yet exercised on Windows: the API server (`worldbrief serve`) and anything on a phone.
+
+### What the real briefing got wrong
+
+Found by reading it. The briefing itself is in `benchmarks/2026-11-23-first-real-run/` on the desktop; it is not in Git.
+
+1. **Sections were often wrong.** Stories about the Middle East and Southeast Asia were filed under "other regions", and a story about diplomatic talks under "energy". The coverage note then wrongly said those regions had no stories.
+2. **Opinion was published as fact.** A sweeping judgement from an opinion column went out as a supported claim. It matched its source; nothing separated commentary from reporting.
+3. **Clustering was weak.** 97 articles became 74 events; two reports of one summit became two stories. Nine of twelve stories rested on one source.
+4. **A United States domestic story was selected** at importance 4.
+5. **No story had an event date.**
+6. **The rules over-removed.** Two of the three removals look like true claims removed by the name-order rule. One removal was right: the model attributed a figure to an outlet that never reported it.
+7. **"Why it matters" survived for only 3 of 12 stories.**
 
 ## Verified
 
@@ -56,12 +80,9 @@ So one of six is confirmed. `python -m worldbrief check-feeds` on the desktop se
 
 | What | How to verify |
 |---|---|
-| The Android app as a whole, and its toolchain versions | A Gradle build. |
+| The Android app as a whole, and its toolchain versions | A Gradle build. Needs a JDK and the Android SDK, which the desktop does not have, or GitHub Actions. |
 | Android handling of `partial` briefings and `unchecked` claims (DTO, Room columns, screens) | A Gradle build; `DemoDataTest` covers the mapping. |
 | Bookmarks surviving regeneration on the phone | Follows from stable story ids (tested in the backend) and bookmarks being keyed by story id. Needs an on-device check. |
-| Real LM Studio inference; LM Studio model-info lookup (tries `/api/v1/models`, then `/api/v0/models`) | The real-run report. |
-| GPU and memory sampling (`nvidia-smi`, `psutil`) | The real-run report. Neither tool exists in the build environment, so only the "not available" path has run. |
-| `scripts\verify_windows.ps1` | Has never been run. Each step is also listed as a plain command in the README. |
 | Embedding-based clustering | Set `lmstudio.embedding_model`. |
 
 ## Known limits of the verification rules

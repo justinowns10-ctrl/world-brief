@@ -1,0 +1,10 @@
+﻿python.exe : 
+At C:\Users\justi\Documents\Projects\world-brief\scripts\verify_windows.ps1:35 char:1
++ & .\.venv\Scripts\python.exe -m pip install --quiet -e ".[dev,measure ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[notice] A new release of pip is available: 26.2.2 -> 26.3
+[notice] To update, run: C:\Users\justi\Documents\Projects\world-brief\backend\.venv\Scripts\python.exe -m pip install 
+--upgrade pip

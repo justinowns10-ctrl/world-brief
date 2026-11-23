@@ -1,27 +1,65 @@
-# Python
+# ---- Secrets and real configuration -------------------------------------
+backend/config.toml
+*.env
+.env*
+*.token
+*token*.txt
+*.pem
+*.key
+*.keystore
+*.jks
+local.properties
+
+# ---- Local databases and generated news data ----------------------------
+backend/data/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+briefing-20*.json
+!contract/examples/briefing-*.json
+!android/app/src/main/assets/demo/briefing-*.json
+# Benchmark runs keep their measurements in Git; the news content they
+# produced (briefing, claims, headlines, source records) stays on disk only.
+benchmarks/*/briefing-*.json
+benchmarks/*/real-run.json
+benchmarks/*/real-run.md
+benchmarks/*/real-run-console.txt
+benchmarks/*/real-run-status.txt
+benchmarks/*/claim-review*.md
+benchmarks/*/config-used.toml
+
+# ---- Virtual environments and Python build output ------------------------
+.venv/
+venv/
 __pycache__/
 *.egg-info/
 .pytest_cache/
-.venv/
 
-# Backend runtime data and local settings
-backend/data/
-backend/config.toml
+# ---- Model files ----------------------------------------------------------
+*.gguf
+*.safetensors
+*.bin
+*.onnx
+models/
 
-# Android / Gradle
+# ---- Android / Gradle -------------------------------------------------------
 android/.gradle/
 android/build/
 android/app/build/
-android/local.properties
 android/.idea/
 android/.kotlin/
 *.iml
+*.apk
+*.aab
 
-# OS
-.DS_Store
-Thumbs.db
-
-# CI and local build output
+# ---- CI and local build output ----------------------------------------------
 backend/pytest-output.txt
 android/android-build.log
 android/android-dependencies.txt
+world-brief*.zip
+
+# ---- OS ---------------------------------------------------------------------
+.DS_Store
+Thumbs.db

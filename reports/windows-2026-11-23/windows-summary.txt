@@ -1,0 +1,8 @@
+﻿World Brief Windows verification, 2026-11-23T05:35:31
+Python: C:\Users\justi\miniforge3\python.exe (3.14)
+install : exit code 0
+backend tests : exit code 0
+live feeds : exit code 0
+LM Studio reachable : exit code 0
+real run : exit code 0
+android build : exit code 9009
