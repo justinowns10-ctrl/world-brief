@@ -75,6 +75,11 @@ So one of six is confirmed. `python -m worldbrief check-feeds` on the desktop se
 - Analysis ("why it matters") is the weakest field: by nature it is not stated in the sources. It is published only when it adds no figure, name or causal word and the model check explicitly approves it. With a weak checking model, expect it to be mostly absent or occasionally wrong.
 - Wire-copy detection is a pattern match; rewritten wire copy counts as an independent source.
 
+## Backlog from review (not started, not blockers for the first APK)
+
+- **WB-008 Persistent event identity.** A story id is the briefing date plus the id of the event's earliest report. It survives reordering, but changes if an earlier article joins the cluster on a later run. Needs a stored event table or a remapping from old ids to new.
+- **WB-009 Verification independence.** Drafting and checking may use the same local model, so the second pass is a consistency check, not independent corroboration. During real LM Studio testing, hand-review a sample of claims and count false approvals (published but wrong) and false rejections (removed but right). `claim_audit` and the real-run report list every claim with its verdict, which is the sample frame.
+
 ## Planned (unchanged; nothing here was started)
 
 Scheduling, background sync and notifications on Android, foreground playback service, remote access with HTTPS, encrypted token storage, reuse of the existing multi-agent project's LM Studio code, a multi-model benchmark command, the app reading `GET /v1/status`.
