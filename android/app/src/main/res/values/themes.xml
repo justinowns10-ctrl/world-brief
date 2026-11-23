@@ -1,0 +1,4 @@
+<resources>
+    <color name="launcher_background">#12314F</color>
+    <style name="Theme.WorldBrief" parent="android:Theme.Material.NoActionBar" />
+</resources>

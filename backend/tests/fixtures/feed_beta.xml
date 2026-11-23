@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel><title>Beta Test Feed</title><link>https://beta.test</link><description>Invented test data</description>
+<item><title>Testport flooded as river overflows; 1,200 evacuated</title><link>https://beta.test/testport-flood</link>
+<description>Flood water covered much of the harbour city of Testport after the river overflowed. Officials said 1,200 people were evacuated and three shelters opened.</description>
+<pubDate>Mon, 23 Nov 2026 06:45:00 GMT</pubDate></item>
+<item><title>Parliament of Examplia approves water treaty</title><link>https://beta.test/wire/treaty</link>
+<description>Lawmakers in Examplia approved a water-sharing treaty with neighbouring Samplestan by 140 votes to 60. The treaty covers the Blue River basin.</description>
+<pubDate>Mon, 23 Nov 2026 07:50:00 GMT</pubDate></item>
+<item><title>Researchers map seabed off Samplestan coast</title><link>https://beta.test/seabed</link>
+<description>A research vessel finished mapping 900 square kilometres of seabed off the coast of Samplestan. The survey took four weeks.</description>
+<pubDate>Mon, 23 Nov 2026 05:00:00 GMT</pubDate></item>
+</channel></rss>

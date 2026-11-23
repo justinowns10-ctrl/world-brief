@@ -1,0 +1,326 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-22",
+  "date": "2026-11-22",
+  "generatedAt": "2026-11-22T13:00:00Z",
+  "title": "World Brief",
+  "overview": "Demonstration edition: five sample developments.",
+  "isDemo": true,
+  "generator": {
+    "pipelineVersion": "demo",
+    "model": null
+  },
+  "coverage": {
+    "windowStart": "2026-11-21T13:00:00Z",
+    "windowEnd": "2026-11-22T13:00:00Z",
+    "articlesConsidered": 9,
+    "sourcesConsidered": 5,
+    "sectionsWithoutCoverage": [
+      "middle_east",
+      "south_southeast_asia"
+    ],
+    "notes": [
+      "Demonstration data. Not real news."
+    ]
+  },
+  "sources": [
+    {
+      "id": "meridian",
+      "name": "Meridian Wire (demo)",
+      "country": "International",
+      "type": "wire",
+      "homepage": "https://example.com/demo/source/meridian"
+    },
+    {
+      "id": "northlight",
+      "name": "Northlight Broadcasting (demo)",
+      "country": "Norway",
+      "type": "broadcaster",
+      "homepage": "https://example.com/demo/source/northlight"
+    },
+    {
+      "id": "straits",
+      "name": "Straits Dispatch (demo)",
+      "country": "Singapore",
+      "type": "newspaper",
+      "homepage": "https://example.com/demo/source/straits"
+    },
+    {
+      "id": "ledger",
+      "name": "The Coast Ledger (demo)",
+      "country": "Nigeria",
+      "type": "newspaper",
+      "homepage": "https://example.com/demo/source/ledger"
+    },
+    {
+      "id": "andes",
+      "name": "Andes Daily (demo)",
+      "country": "Peru",
+      "type": "newspaper",
+      "homepage": "https://example.com/demo/source/andes"
+    }
+  ],
+  "stories": [
+    {
+      "id": "2026-11-22-01",
+      "section": "europe",
+      "headline": "Alpine tunnel reopens after safety upgrade",
+      "countries": [
+        "Switzerland"
+      ],
+      "eventDate": "2026-11-22",
+      "firstReportedAt": "2026-11-22T06:07:00Z",
+      "lastReportedAt": "2026-11-22T07:07:00Z",
+      "status": "verified",
+      "importance": 2,
+      "topStory": false,
+      "summary": "A major Alpine road tunnel reopened after a safety upgrade.",
+      "claims": [
+        {
+          "id": "c1",
+          "text": "A major Alpine road tunnel reopened after a safety upgrade.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-22-01-a1",
+              "quote": "Demo passage: A major Alpine road tunnel reopened after a safety upgrade."
+            },
+            {
+              "articleId": "2026-11-22-01-a2",
+              "quote": "Demo passage: A major Alpine road tunnel reopened after a safety upgrade."
+            }
+          ]
+        }
+      ],
+      "whyItMatters": "The closure had diverted freight onto longer routes.",
+      "context": null,
+      "uncertainty": null,
+      "independentSourceCount": 2,
+      "articles": [
+        {
+          "id": "2026-11-22-01-a1",
+          "sourceId": "meridian",
+          "title": "Alpine tunnel reopens after safety upgrade",
+          "url": "https://example.com/demo/2026-11-22/01/meridian",
+          "publishedAt": "2026-11-22T06:07:00Z",
+          "role": "wire"
+        },
+        {
+          "id": "2026-11-22-01-a2",
+          "sourceId": "northlight",
+          "title": "Alpine tunnel reopens after safety upgrade (Northlight Broadcasting)",
+          "url": "https://example.com/demo/2026-11-22/01/northlight",
+          "publishedAt": "2026-11-22T07:07:00Z",
+          "role": "original"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-22-02",
+      "section": "east_asia",
+      "headline": "Regional summit ends without joint statement",
+      "countries": [
+        "South Korea"
+      ],
+      "eventDate": "2026-11-22",
+      "firstReportedAt": "2026-11-22T06:14:00Z",
+      "lastReportedAt": "2026-11-22T07:14:00Z",
+      "status": "verified",
+      "importance": 4,
+      "topStory": true,
+      "summary": "A regional summit closed without a joint statement.",
+      "claims": [
+        {
+          "id": "c1",
+          "text": "A regional summit closed without a joint statement.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-22-02-a1",
+              "quote": "Demo passage: A regional summit closed without a joint statement."
+            },
+            {
+              "articleId": "2026-11-22-02-a2",
+              "quote": "Demo passage: A regional summit closed without a joint statement."
+            }
+          ]
+        }
+      ],
+      "whyItMatters": "A missing statement usually signals disagreement on security language.",
+      "context": null,
+      "uncertainty": null,
+      "independentSourceCount": 2,
+      "articles": [
+        {
+          "id": "2026-11-22-02-a1",
+          "sourceId": "straits",
+          "title": "Regional summit ends without joint statement",
+          "url": "https://example.com/demo/2026-11-22/02/straits",
+          "publishedAt": "2026-11-22T06:14:00Z",
+          "role": "original"
+        },
+        {
+          "id": "2026-11-22-02-a2",
+          "sourceId": "meridian",
+          "title": "Regional summit ends without joint statement (Meridian Wire)",
+          "url": "https://example.com/demo/2026-11-22/02/meridian",
+          "publishedAt": "2026-11-22T07:14:00Z",
+          "role": "wire"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-22-03",
+      "section": "africa",
+      "headline": "Vaccination campaign reaches remote districts",
+      "countries": [
+        "Ethiopia"
+      ],
+      "eventDate": "2026-11-20",
+      "firstReportedAt": "2026-11-22T06:21:00Z",
+      "lastReportedAt": "2026-11-22T06:21:00Z",
+      "status": "preliminary",
+      "importance": 3,
+      "topStory": true,
+      "summary": "Health officials said a vaccination campaign reached remote districts.",
+      "claims": [
+        {
+          "id": "c1",
+          "text": "Health officials said a vaccination campaign reached remote districts.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-22-03-a1",
+              "quote": "Demo passage: Health officials said a vaccination campaign reached remote districts."
+            }
+          ]
+        }
+      ],
+      "whyItMatters": "Coverage in remote areas determines whether outbreaks can be contained.",
+      "context": null,
+      "uncertainty": "Based on a single independent source.",
+      "independentSourceCount": 1,
+      "articles": [
+        {
+          "id": "2026-11-22-03-a1",
+          "sourceId": "ledger",
+          "title": "Vaccination campaign reaches remote districts",
+          "url": "https://example.com/demo/2026-11-22/03/ledger",
+          "publishedAt": "2026-11-22T06:21:00Z",
+          "role": "original"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-22-04",
+      "section": "latin_america",
+      "headline": "Port workers and government reach pay settlement",
+      "countries": [
+        "Chile"
+      ],
+      "eventDate": "2026-11-22",
+      "firstReportedAt": "2026-11-22T06:28:00Z",
+      "lastReportedAt": "2026-11-22T07:28:00Z",
+      "status": "verified",
+      "importance": 3,
+      "topStory": false,
+      "summary": "Port unions and the government announced a pay settlement.",
+      "claims": [
+        {
+          "id": "c1",
+          "text": "Port unions and the government announced a pay settlement.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-22-04-a1",
+              "quote": "Demo passage: Port unions and the government announced a pay settlement."
+            },
+            {
+              "articleId": "2026-11-22-04-a2",
+              "quote": "Demo passage: Port unions and the government announced a pay settlement."
+            }
+          ]
+        }
+      ],
+      "whyItMatters": "The dispute had slowed copper exports.",
+      "context": null,
+      "uncertainty": null,
+      "independentSourceCount": 2,
+      "articles": [
+        {
+          "id": "2026-11-22-04-a1",
+          "sourceId": "andes",
+          "title": "Port workers and government reach pay settlement",
+          "url": "https://example.com/demo/2026-11-22/04/andes",
+          "publishedAt": "2026-11-22T06:28:00Z",
+          "role": "original"
+        },
+        {
+          "id": "2026-11-22-04-a2",
+          "sourceId": "meridian",
+          "title": "Port workers and government reach pay settlement (Meridian Wire)",
+          "url": "https://example.com/demo/2026-11-22/04/meridian",
+          "publishedAt": "2026-11-22T07:28:00Z",
+          "role": "wire"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-22-05",
+      "section": "technology",
+      "headline": "Regulators publish shared rules for satellite debris",
+      "countries": [],
+      "eventDate": "2026-11-22",
+      "firstReportedAt": "2026-11-22T06:35:00Z",
+      "lastReportedAt": "2026-11-22T07:35:00Z",
+      "status": "verified",
+      "importance": 3,
+      "topStory": false,
+      "summary": "Space regulators published shared guidelines on satellite debris.",
+      "claims": [
+        {
+          "id": "c1",
+          "text": "Space regulators published shared guidelines on satellite debris.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-22-05-a1",
+              "quote": "Demo passage: Space regulators published shared guidelines on satellite debris."
+            },
+            {
+              "articleId": "2026-11-22-05-a2",
+              "quote": "Demo passage: Space regulators published shared guidelines on satellite debris."
+            }
+          ]
+        }
+      ],
+      "whyItMatters": "Crowded orbits raise collision risk for communications satellites.",
+      "context": null,
+      "uncertainty": null,
+      "independentSourceCount": 2,
+      "articles": [
+        {
+          "id": "2026-11-22-05-a1",
+          "sourceId": "meridian",
+          "title": "Regulators publish shared rules for satellite debris",
+          "url": "https://example.com/demo/2026-11-22/05/meridian",
+          "publishedAt": "2026-11-22T06:35:00Z",
+          "role": "wire"
+        },
+        {
+          "id": "2026-11-22-05-a2",
+          "sourceId": "northlight",
+          "title": "Regulators publish shared rules for satellite debris (Northlight Broadcasting)",
+          "url": "https://example.com/demo/2026-11-22/05/northlight",
+          "publishedAt": "2026-11-22T07:35:00Z",
+          "role": "original"
+        }
+      ]
+    }
+  ]
+}

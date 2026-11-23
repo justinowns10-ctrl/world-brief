@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://worldbrief.invalid/contract/briefing.schema.json",
+  "title": "World Brief daily briefing",
+  "description": "Source-independent contract between the World Brief backend and its clients. Version 1.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "id", "date", "generatedAt", "title", "overview", "sources", "stories"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "description": "Briefing id. Equal to its date." },
+    "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "generatedAt": { "$ref": "#/$defs/instant" },
+    "title": { "type": "string", "minLength": 1 },
+    "overview": { "type": "string" },
+    "isDemo": { "type": "boolean", "default": false, "description": "True when the content is demonstration data, not real reporting." },
+    "generator": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "pipelineVersion": { "type": "string" },
+        "model": { "type": ["string", "null"] }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "windowStart": { "$ref": "#/$defs/instant" },
+        "windowEnd": { "$ref": "#/$defs/instant" },
+        "articlesConsidered": { "type": "integer", "minimum": 0 },
+        "sourcesConsidered": { "type": "integer", "minimum": 0 },
+        "sectionsWithoutCoverage": { "type": "array", "items": { "$ref": "#/$defs/section" } },
+        "notes": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "sources": { "type": "array", "items": { "$ref": "#/$defs/source" } },
+    "stories": { "type": "array", "items": { "$ref": "#/$defs/story" } }
+  },
+  "$defs": {
+    "instant": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+      "description": "UTC timestamp, second precision, e.g. 2026-11-23T13:00:00Z"
+    },
+    "section": {
+      "enum": [
+        "europe", "middle_east", "east_asia", "south_southeast_asia", "africa", "latin_america", "other_regions",
+        "science", "technology", "energy", "economics", "humanitarian"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "country": { "type": ["string", "null"] },
+        "type": { "type": ["string", "null"], "description": "e.g. wire, broadcaster, newspaper, agency, ngo" },
+        "homepage": { "type": ["string", "null"] }
+      }
+    },
+    "article": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "sourceId", "title", "url", "publishedAt"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "sourceId": { "type": "string", "minLength": 1 },
+        "title": { "type": "string" },
+        "url": { "type": "string", "pattern": "^https?://" },
+        "publishedAt": { "$ref": "#/$defs/instant", "description": "When this outlet published its report (reporting date)." },
+        "role": { "enum": ["original", "wire", "syndicated"], "default": "original" }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["articleId", "quote"],
+      "properties": {
+        "articleId": { "type": "string", "description": "Must match an article id in the same story." },
+        "quote": { "type": "string", "minLength": 1, "description": "Passage from that article that supports the claim." }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "text", "support", "evidence"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "text": { "type": "string", "minLength": 1 },
+        "support": {
+          "enum": ["supported", "partial"],
+          "description": "Result of checking the claim against its evidence. Unsupported and contradicted claims are never published."
+        },
+        "note": { "type": ["string", "null"], "description": "Why a claim is only partly supported." },
+        "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/evidence" } }
+      }
+    },
+    "story": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "section", "headline", "status", "summary", "claims", "articles", "firstReportedAt"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "description": "Globally unique." },
+        "section": { "$ref": "#/$defs/section" },
+        "headline": { "type": "string", "minLength": 1 },
+        "countries": { "type": "array", "items": { "type": "string" } },
+        "eventDate": { "type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "description": "When the event happened, if the sources say. Null when unknown. Distinct from reporting dates." },
+        "firstReportedAt": { "$ref": "#/$defs/instant", "description": "Earliest publishedAt among the story's articles." },
+        "lastReportedAt": { "$ref": "#/$defs/instant" },
+        "status": { "enum": ["verified", "preliminary", "disputed"] },
+        "importance": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "topStory": { "type": "boolean", "default": false },
+        "summary": { "type": "string", "minLength": 1, "description": "Factual summary. Equal to the published claims joined in order." },
+        "claims": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/claim" } },
+        "whyItMatters": { "type": ["string", "null"], "description": "Analysis. Not a verified fact; clients must label it as analysis." },
+        "context": { "type": ["string", "null"], "description": "Background. Clients must label it as background." },
+        "uncertainty": { "type": ["string", "null"], "description": "What is unknown, single-sourced, partly confirmed or in conflict." },
+        "independentSourceCount": { "type": "integer", "minimum": 0, "description": "Sources counted after collapsing syndicated copies and shared wire reports." },
+        "articles": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/article" } }
+      }
+    }
+  }
+}

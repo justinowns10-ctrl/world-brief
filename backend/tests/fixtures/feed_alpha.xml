@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel><title>Alpha Test Feed</title><link>https://alpha.test</link><description>Invented test data</description>
+<item><title>Harbour city floods after river bursts banks</title><link>https://alpha.test/floods?utm_source=rss</link>
+<description>&lt;p&gt;The river burst its banks on Sunday and flooded the harbour city of Testport. Officials said 1,200 people left their homes. Emergency crews opened three shelters.&lt;/p&gt;</description>
+<pubDate>Mon, 23 Nov 2026 06:10:00 GMT</pubDate></item>
+<item><title>Parliament of Examplia approves water treaty</title><link>https://alpha.test/treaty</link>
+<description>Lawmakers in Examplia approved a water-sharing treaty with neighbouring Samplestan by 140 votes to 60. The treaty covers the Blue River basin.</description>
+<pubDate>Mon, 23 Nov 2026 07:30:00 GMT</pubDate></item>
+<item><title>Old story outside the window</title><link>https://alpha.test/old</link>
+<description>This item is too old and must be ignored by the run.</description>
+<pubDate>Mon, 16 Nov 2026 07:30:00 GMT</pubDate></item>
+<item><title>Entry with no date is skipped</title><link>https://alpha.test/nodate</link><description>No date here.</description></item>
+</channel></rss>

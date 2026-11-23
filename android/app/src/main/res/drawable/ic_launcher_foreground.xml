@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A plain globe: circle, equator, meridian, two latitude lines. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M54,54m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0"
+        android:strokeColor="#F4F1EA"
+        android:strokeWidth="3" />
+    <path
+        android:pathData="M32,54h44M54,32v44M36,43h36M36,65h36"
+        android:strokeColor="#F4F1EA"
+        android:strokeWidth="2" />
+    <path
+        android:pathData="M54,32c-12,10 -12,34 0,44M54,32c12,10 12,34 0,44"
+        android:strokeColor="#F4F1EA"
+        android:strokeWidth="2" />
+</vector>

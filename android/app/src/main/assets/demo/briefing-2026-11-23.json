@@ -1,0 +1,752 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-11-23",
+  "date": "2026-11-23",
+  "generatedAt": "2026-11-23T13:00:00Z",
+  "title": "World Brief",
+  "overview": "Demonstration edition: twelve sample developments across six regions and five topics.",
+  "isDemo": true,
+  "generator": {
+    "pipelineVersion": "demo",
+    "model": null
+  },
+  "coverage": {
+    "windowStart": "2026-11-22T13:00:00Z",
+    "windowEnd": "2026-11-23T13:00:00Z",
+    "articlesConsidered": 20,
+    "sourcesConsidered": 7,
+    "sectionsWithoutCoverage": [],
+    "notes": [
+      "Demonstration data. Not real news."
+    ]
+  },
+  "sources": [
+    {
+      "id": "meridian",
+      "name": "Meridian Wire (demo)",
+      "country": "International",
+      "type": "wire",
+      "homepage": "https://example.com/demo/source/meridian"
+    },
+    {
+      "id": "northlight",
+      "name": "Northlight Broadcasting (demo)",
+      "country": "Norway",
+      "type": "broadcaster",
+      "homepage": "https://example.com/demo/source/northlight"
+    },
+    {
+      "id": "levant",
+      "name": "Levant Report (demo)",
+      "country": "Jordan",
+      "type": "broadcaster",
+      "homepage": "https://example.com/demo/source/levant"
+    },
+    {
+      "id": "straits",
+      "name": "Straits Dispatch (demo)",
+      "country": "Singapore",
+      "type": "newspaper",
+      "homepage": "https://example.com/demo/source/straits"
+    },
+    {
+      "id": "ledger",
+      "name": "The Coast Ledger (demo)",
+      "country": "Nigeria",
+      "type": "newspaper",
+      "homepage": "https://example.com/demo/source/ledger"
+    },
+    {
+      "id": "andes",
+      "name": "Andes Daily (demo)",
+      "country": "Peru",
+      "type": "newspaper",
+      "homepage": "https://example.com/demo/source/andes"
+    },
+    {
+      "id": "relief",
+      "name": "Relief Monitor (demo)",
+      "country": "International",
+      "type": "ngo",
+      "homepage": "https://example.com/demo/source/relief"
+    }
+  ],
+  "stories": [
+    {
+      "id": "2026-11-23-01",
+      "section": "europe",
+      "headline": "Baltic states agree shared monitoring of undersea cables",
+      "countries": [
+        "Estonia",
+        "Latvia",
+        "Lithuania"
+      ],
+      "eventDate": "2026-11-23",
+      "firstReportedAt": "2026-11-23T06:07:00Z",
+      "lastReportedAt": "2026-11-23T07:07:00Z",
+      "status": "verified",
+      "importance": 4,
+      "topStory": true,
+      "summary": "Three Baltic governments signed an agreement to share monitoring data on undersea cables. The arrangement takes effect in January.",
+      "claims": [
+        {
+          "id": "c1",
+          "text": "Three Baltic governments signed an agreement to share monitoring data on undersea cables.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-23-01-a1",
+              "quote": "Demo passage: Three Baltic governments signed an agreement to share monitoring data on undersea cables."
+            },
+            {
+              "articleId": "2026-11-23-01-a2",
+              "quote": "Demo passage: Three Baltic governments signed an agreement to share monitoring data on undersea cables."
+            }
+          ]
+        },
+        {
+          "id": "c2",
+          "text": "The arrangement takes effect in January.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-23-01-a2",
+              "quote": "Demo passage: The arrangement takes effect in January."
+            }
+          ]
+        }
+      ],
+      "whyItMatters": "Undersea cables carry most of the region's data and power links, so shared monitoring shortens the time to spot damage.",
+      "context": "Several cables in the area were damaged over the past two years.",
+      "uncertainty": null,
+      "independentSourceCount": 2,
+      "articles": [
+        {
+          "id": "2026-11-23-01-a1",
+          "sourceId": "meridian",
+          "title": "Baltic states agree shared monitoring of undersea cables",
+          "url": "https://example.com/demo/2026-11-23/01/meridian",
+          "publishedAt": "2026-11-23T06:07:00Z",
+          "role": "wire"
+        },
+        {
+          "id": "2026-11-23-01-a2",
+          "sourceId": "northlight",
+          "title": "Baltic states agree shared monitoring of undersea cables (Northlight Broadcasting)",
+          "url": "https://example.com/demo/2026-11-23/01/northlight",
+          "publishedAt": "2026-11-23T07:07:00Z",
+          "role": "original"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-23-02",
+      "section": "europe",
+      "headline": "Rail strike halts cross-border freight for a second day",
+      "countries": [
+        "Austria",
+        "Italy"
+      ],
+      "eventDate": "2026-11-23",
+      "firstReportedAt": "2026-11-23T06:14:00Z",
+      "lastReportedAt": "2026-11-23T06:14:00Z",
+      "status": "preliminary",
+      "importance": 2,
+      "topStory": false,
+      "summary": "A rail strike stopped cross-border freight trains for a second day. Union and operator are due to meet tomorrow.",
+      "claims": [
+        {
+          "id": "c1",
+          "text": "A rail strike stopped cross-border freight trains for a second day.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-23-02-a1",
+              "quote": "Demo passage: A rail strike stopped cross-border freight trains for a second day."
+            }
+          ]
+        },
+        {
+          "id": "c2",
+          "text": "Union and operator are due to meet tomorrow.",
+          "support": "partial",
+          "note": "The cited report gives the meeting as planned, not confirmed.",
+          "evidence": [
+            {
+              "articleId": "2026-11-23-02-a1",
+              "quote": "Demo passage: Union and operator are due to meet tomorrow."
+            }
+          ]
+        }
+      ],
+      "whyItMatters": "The route is a main freight corridor across the Alps.",
+      "context": null,
+      "uncertainty": "Based on a single independent source. One statement could only be partly confirmed.",
+      "independentSourceCount": 1,
+      "articles": [
+        {
+          "id": "2026-11-23-02-a1",
+          "sourceId": "meridian",
+          "title": "Rail strike halts cross-border freight for a second day",
+          "url": "https://example.com/demo/2026-11-23/02/meridian",
+          "publishedAt": "2026-11-23T06:14:00Z",
+          "role": "wire"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-23-03",
+      "section": "middle_east",
+      "headline": "Ceasefire talks resume with mediators reporting narrow gaps",
+      "countries": [
+        "Jordan"
+      ],
+      "eventDate": "2026-11-23",
+      "firstReportedAt": "2026-11-23T06:21:00Z",
+      "lastReportedAt": "2026-11-23T07:21:00Z",
+      "status": "disputed",
+      "importance": 5,
+      "topStory": true,
+      "summary": "Mediators said negotiating teams returned to talks on Sunday. One delegation described the remaining differences as narrow.",
+      "claims": [
+        {
+          "id": "c1",
+          "text": "Mediators said negotiating teams returned to talks on Sunday.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-23-03-a1",
+              "quote": "Demo passage: Mediators said negotiating teams returned to talks on Sunday."
+            },
+            {
+              "articleId": "2026-11-23-03-a2",
+              "quote": "Demo passage: Mediators said negotiating teams returned to talks on Sunday."
+            }
+          ]
+        },
+        {
+          "id": "c2",
+          "text": "One delegation described the remaining differences as narrow.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-23-03-a1",
+              "quote": "Demo passage: One delegation described the remaining differences as narrow."
+            }
+          ]
+        }
+      ],
+      "whyItMatters": "A deal would reopen aid routes that have been closed for weeks.",
+      "context": null,
+      "uncertainty": "Sources conflict on whether a draft text exists: one delegation says yes, the other denies it.",
+      "independentSourceCount": 2,
+      "articles": [
+        {
+          "id": "2026-11-23-03-a1",
+          "sourceId": "levant",
+          "title": "Ceasefire talks resume with mediators reporting narrow gaps",
+          "url": "https://example.com/demo/2026-11-23/03/levant",
+          "publishedAt": "2026-11-23T06:21:00Z",
+          "role": "original"
+        },
+        {
+          "id": "2026-11-23-03-a2",
+          "sourceId": "meridian",
+          "title": "Ceasefire talks resume with mediators reporting narrow gaps (Meridian Wire)",
+          "url": "https://example.com/demo/2026-11-23/03/meridian",
+          "publishedAt": "2026-11-23T07:21:00Z",
+          "role": "wire"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-23-04",
+      "section": "east_asia",
+      "headline": "Typhoon forces evacuation of coastal towns",
+      "countries": [
+        "Japan"
+      ],
+      "eventDate": "2026-11-22",
+      "firstReportedAt": "2026-11-23T06:28:00Z",
+      "lastReportedAt": "2026-11-23T07:28:00Z",
+      "status": "verified",
+      "importance": 4,
+      "topStory": true,
+      "summary": "Authorities ordered the evacuation of several coastal towns ahead of a typhoon. Rail and ferry services were suspended.",
+      "claims": [
+        {
+          "id": "c1",
+          "text": "Authorities ordered the evacuation of several coastal towns ahead of a typhoon.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-23-04-a1",
+              "quote": "Demo passage: Authorities ordered the evacuation of several coastal towns ahead of a typhoon."
+            },
+            {
+              "articleId": "2026-11-23-04-a2",
+              "quote": "Demo passage: Authorities ordered the evacuation of several coastal towns ahead of a typhoon."
+            }
+          ]
+        },
+        {
+          "id": "c2",
+          "text": "Rail and ferry services were suspended.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-23-04-a2",
+              "quote": "Demo passage: Rail and ferry services were suspended."
+            }
+          ]
+        }
+      ],
+      "whyItMatters": "Early evacuation orders are the main tool for limiting casualties in typhoon season.",
+      "context": null,
+      "uncertainty": null,
+      "independentSourceCount": 2,
+      "articles": [
+        {
+          "id": "2026-11-23-04-a1",
+          "sourceId": "meridian",
+          "title": "Typhoon forces evacuation of coastal towns",
+          "url": "https://example.com/demo/2026-11-23/04/meridian",
+          "publishedAt": "2026-11-23T06:28:00Z",
+          "role": "wire"
+        },
+        {
+          "id": "2026-11-23-04-a2",
+          "sourceId": "straits",
+          "title": "Typhoon forces evacuation of coastal towns (Straits Dispatch)",
+          "url": "https://example.com/demo/2026-11-23/04/straits",
+          "publishedAt": "2026-11-23T07:28:00Z",
+          "role": "original"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-23-05",
+      "section": "south_southeast_asia",
+      "headline": "Regional bloc agrees common rules for cross-border power trading",
+      "countries": [
+        "Singapore",
+        "Malaysia",
+        "Thailand"
+      ],
+      "eventDate": "2026-11-23",
+      "firstReportedAt": "2026-11-23T06:35:00Z",
+      "lastReportedAt": "2026-11-23T07:35:00Z",
+      "status": "verified",
+      "importance": 3,
+      "topStory": false,
+      "summary": "Energy ministers approved common rules for trading electricity across borders.",
+      "claims": [
+        {
+          "id": "c1",
+          "text": "Energy ministers approved common rules for trading electricity across borders.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-23-05-a1",
+              "quote": "Demo passage: Energy ministers approved common rules for trading electricity across borders."
+            },
+            {
+              "articleId": "2026-11-23-05-a2",
+              "quote": "Demo passage: Energy ministers approved common rules for trading electricity across borders."
+            }
+          ]
+        }
+      ],
+      "whyItMatters": "Shared rules let countries with surplus hydropower or solar sell it to neighbours.",
+      "context": null,
+      "uncertainty": null,
+      "independentSourceCount": 2,
+      "articles": [
+        {
+          "id": "2026-11-23-05-a1",
+          "sourceId": "straits",
+          "title": "Regional bloc agrees common rules for cross-border power trading",
+          "url": "https://example.com/demo/2026-11-23/05/straits",
+          "publishedAt": "2026-11-23T06:35:00Z",
+          "role": "original"
+        },
+        {
+          "id": "2026-11-23-05-a2",
+          "sourceId": "meridian",
+          "title": "Regional bloc agrees common rules for cross-border power trading (Meridian Wire)",
+          "url": "https://example.com/demo/2026-11-23/05/meridian",
+          "publishedAt": "2026-11-23T07:35:00Z",
+          "role": "wire"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-23-06",
+      "section": "africa",
+      "headline": "West African port reopens after dredging closure",
+      "countries": [
+        "Nigeria"
+      ],
+      "eventDate": "2026-11-22",
+      "firstReportedAt": "2026-11-23T06:42:00Z",
+      "lastReportedAt": "2026-11-23T06:42:00Z",
+      "status": "preliminary",
+      "importance": 3,
+      "topStory": false,
+      "summary": "The port resumed full operations after a dredging closure.",
+      "claims": [
+        {
+          "id": "c1",
+          "text": "The port resumed full operations after a dredging closure.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-23-06-a1",
+              "quote": "Demo passage: The port resumed full operations after a dredging closure."
+            }
+          ]
+        }
+      ],
+      "whyItMatters": "The port handles a large share of the region's container traffic.",
+      "context": null,
+      "uncertainty": "Based on a single independent source.",
+      "independentSourceCount": 1,
+      "articles": [
+        {
+          "id": "2026-11-23-06-a1",
+          "sourceId": "ledger",
+          "title": "West African port reopens after dredging closure",
+          "url": "https://example.com/demo/2026-11-23/06/ledger",
+          "publishedAt": "2026-11-23T06:42:00Z",
+          "role": "original"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-23-07",
+      "section": "africa",
+      "headline": "Regional court rules on disputed border region",
+      "countries": [
+        "Kenya",
+        "Somalia"
+      ],
+      "eventDate": "2026-11-23",
+      "firstReportedAt": "2026-11-23T06:49:00Z",
+      "lastReportedAt": "2026-11-23T07:49:00Z",
+      "status": "verified",
+      "importance": 4,
+      "topStory": true,
+      "summary": "A regional court issued a ruling on a disputed border area. Both governments said they would study the judgment.",
+      "claims": [
+        {
+          "id": "c1",
+          "text": "A regional court issued a ruling on a disputed border area.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-23-07-a1",
+              "quote": "Demo passage: A regional court issued a ruling on a disputed border area."
+            },
+            {
+              "articleId": "2026-11-23-07-a2",
+              "quote": "Demo passage: A regional court issued a ruling on a disputed border area."
+            }
+          ]
+        },
+        {
+          "id": "c2",
+          "text": "Both governments said they would study the judgment.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-23-07-a2",
+              "quote": "Demo passage: Both governments said they would study the judgment."
+            }
+          ]
+        }
+      ],
+      "whyItMatters": "The ruling affects fishing rights and offshore exploration licences.",
+      "context": "The dispute has been before courts for a decade.",
+      "uncertainty": null,
+      "independentSourceCount": 2,
+      "articles": [
+        {
+          "id": "2026-11-23-07-a1",
+          "sourceId": "ledger",
+          "title": "Regional court rules on disputed border region",
+          "url": "https://example.com/demo/2026-11-23/07/ledger",
+          "publishedAt": "2026-11-23T06:49:00Z",
+          "role": "original"
+        },
+        {
+          "id": "2026-11-23-07-a2",
+          "sourceId": "meridian",
+          "title": "Regional court rules on disputed border region (Meridian Wire)",
+          "url": "https://example.com/demo/2026-11-23/07/meridian",
+          "publishedAt": "2026-11-23T07:49:00Z",
+          "role": "wire"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-23-08",
+      "section": "latin_america",
+      "headline": "Andean drought prompts hydropower rationing",
+      "countries": [
+        "Peru",
+        "Ecuador"
+      ],
+      "eventDate": "2026-11-23",
+      "firstReportedAt": "2026-11-23T06:56:00Z",
+      "lastReportedAt": "2026-11-23T07:56:00Z",
+      "status": "verified",
+      "importance": 3,
+      "topStory": false,
+      "summary": "Two Andean countries announced scheduled power cuts as reservoirs fell.",
+      "claims": [
+        {
+          "id": "c1",
+          "text": "Two Andean countries announced scheduled power cuts as reservoirs fell.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-23-08-a1",
+              "quote": "Demo passage: Two Andean countries announced scheduled power cuts as reservoirs fell."
+            },
+            {
+              "articleId": "2026-11-23-08-a2",
+              "quote": "Demo passage: Two Andean countries announced scheduled power cuts as reservoirs fell."
+            }
+          ]
+        }
+      ],
+      "whyItMatters": "Both countries rely on hydropower for most of their electricity.",
+      "context": null,
+      "uncertainty": null,
+      "independentSourceCount": 2,
+      "articles": [
+        {
+          "id": "2026-11-23-08-a1",
+          "sourceId": "andes",
+          "title": "Andean drought prompts hydropower rationing",
+          "url": "https://example.com/demo/2026-11-23/08/andes",
+          "publishedAt": "2026-11-23T06:56:00Z",
+          "role": "original"
+        },
+        {
+          "id": "2026-11-23-08-a2",
+          "sourceId": "meridian",
+          "title": "Andean drought prompts hydropower rationing (Meridian Wire)",
+          "url": "https://example.com/demo/2026-11-23/08/meridian",
+          "publishedAt": "2026-11-23T07:56:00Z",
+          "role": "wire"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-23-09",
+      "section": "science",
+      "headline": "Deep-sea survey catalogues previously unrecorded species",
+      "countries": [],
+      "eventDate": "2026-11-20",
+      "firstReportedAt": "2026-11-23T06:03:00Z",
+      "lastReportedAt": "2026-11-23T06:03:00Z",
+      "status": "preliminary",
+      "importance": 2,
+      "topStory": false,
+      "summary": "A research expedition reported dozens of species not previously recorded.",
+      "claims": [
+        {
+          "id": "c1",
+          "text": "A research expedition reported dozens of species not previously recorded.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-23-09-a1",
+              "quote": "Demo passage: A research expedition reported dozens of species not previously recorded."
+            }
+          ]
+        }
+      ],
+      "whyItMatters": "Baseline surveys shape decisions on seabed mining permits.",
+      "context": null,
+      "uncertainty": "Based on a single independent source. The findings have not been peer reviewed.",
+      "independentSourceCount": 1,
+      "articles": [
+        {
+          "id": "2026-11-23-09-a1",
+          "sourceId": "northlight",
+          "title": "Deep-sea survey catalogues previously unrecorded species",
+          "url": "https://example.com/demo/2026-11-23/09/northlight",
+          "publishedAt": "2026-11-23T06:03:00Z",
+          "role": "original"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-23-10",
+      "section": "energy",
+      "headline": "Grid operators test first long-distance hydrogen pipeline segment",
+      "countries": [
+        "Norway",
+        "Germany"
+      ],
+      "eventDate": "2026-11-23",
+      "firstReportedAt": "2026-11-23T06:10:00Z",
+      "lastReportedAt": "2026-11-23T07:10:00Z",
+      "status": "verified",
+      "importance": 3,
+      "topStory": false,
+      "summary": "Operators began pressure tests on a hydrogen pipeline segment.",
+      "claims": [
+        {
+          "id": "c1",
+          "text": "Operators began pressure tests on a hydrogen pipeline segment.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-23-10-a1",
+              "quote": "Demo passage: Operators began pressure tests on a hydrogen pipeline segment."
+            },
+            {
+              "articleId": "2026-11-23-10-a2",
+              "quote": "Demo passage: Operators began pressure tests on a hydrogen pipeline segment."
+            }
+          ]
+        }
+      ],
+      "whyItMatters": "It is a test of whether existing gas corridors can be converted.",
+      "context": null,
+      "uncertainty": null,
+      "independentSourceCount": 2,
+      "articles": [
+        {
+          "id": "2026-11-23-10-a1",
+          "sourceId": "northlight",
+          "title": "Grid operators test first long-distance hydrogen pipeline segment",
+          "url": "https://example.com/demo/2026-11-23/10/northlight",
+          "publishedAt": "2026-11-23T06:10:00Z",
+          "role": "original"
+        },
+        {
+          "id": "2026-11-23-10-a2",
+          "sourceId": "meridian",
+          "title": "Grid operators test first long-distance hydrogen pipeline segment (Meridian Wire)",
+          "url": "https://example.com/demo/2026-11-23/10/meridian",
+          "publishedAt": "2026-11-23T07:10:00Z",
+          "role": "wire"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-23-11",
+      "section": "economics",
+      "headline": "Central banks coordinate currency swap lines",
+      "countries": [],
+      "eventDate": "2026-11-23",
+      "firstReportedAt": "2026-11-23T06:17:00Z",
+      "lastReportedAt": "2026-11-23T07:17:00Z",
+      "status": "verified",
+      "importance": 3,
+      "topStory": false,
+      "summary": "Several central banks announced expanded currency swap lines.",
+      "claims": [
+        {
+          "id": "c1",
+          "text": "Several central banks announced expanded currency swap lines.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-23-11-a1",
+              "quote": "Demo passage: Several central banks announced expanded currency swap lines."
+            },
+            {
+              "articleId": "2026-11-23-11-a2",
+              "quote": "Demo passage: Several central banks announced expanded currency swap lines."
+            }
+          ]
+        }
+      ],
+      "whyItMatters": "Swap lines reduce the risk of dollar shortages in smaller economies.",
+      "context": null,
+      "uncertainty": null,
+      "independentSourceCount": 2,
+      "articles": [
+        {
+          "id": "2026-11-23-11-a1",
+          "sourceId": "meridian",
+          "title": "Central banks coordinate currency swap lines",
+          "url": "https://example.com/demo/2026-11-23/11/meridian",
+          "publishedAt": "2026-11-23T06:17:00Z",
+          "role": "wire"
+        },
+        {
+          "id": "2026-11-23-11-a2",
+          "sourceId": "straits",
+          "title": "Central banks coordinate currency swap lines (Straits Dispatch)",
+          "url": "https://example.com/demo/2026-11-23/11/straits",
+          "publishedAt": "2026-11-23T07:17:00Z",
+          "role": "original"
+        }
+      ]
+    },
+    {
+      "id": "2026-11-23-12",
+      "section": "humanitarian",
+      "headline": "Aid agencies warn of funding gap for flood response",
+      "countries": [
+        "Bangladesh"
+      ],
+      "eventDate": "2026-11-23",
+      "firstReportedAt": "2026-11-23T06:24:00Z",
+      "lastReportedAt": "2026-11-23T06:24:00Z",
+      "status": "preliminary",
+      "importance": 4,
+      "topStory": false,
+      "summary": "Aid agencies said the flood response appeal is less than half funded.",
+      "claims": [
+        {
+          "id": "c1",
+          "text": "Aid agencies said the flood response appeal is less than half funded.",
+          "support": "supported",
+          "note": null,
+          "evidence": [
+            {
+              "articleId": "2026-11-23-12-a1",
+              "quote": "Demo passage: Aid agencies said the flood response appeal is less than half funded."
+            }
+          ]
+        }
+      ],
+      "whyItMatters": "Funding shortfalls decide how many people receive shelter before winter.",
+      "context": null,
+      "uncertainty": "Based on a single independent source, which is itself party to the appeal.",
+      "independentSourceCount": 1,
+      "articles": [
+        {
+          "id": "2026-11-23-12-a1",
+          "sourceId": "relief",
+          "title": "Aid agencies warn of funding gap for flood response",
+          "url": "https://example.com/demo/2026-11-23/12/relief",
+          "publishedAt": "2026-11-23T06:24:00Z",
+          "role": "original"
+        }
+      ]
+    }
+  ]
+}

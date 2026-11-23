@@ -1,0 +1,98 @@
+# World Brief backend configuration.
+# Copy to config.toml and edit. Every value shown is the default unless noted.
+
+[paths]
+database = "data/worldbrief.db"
+log_dir = "data/logs"
+export_dir = "data/briefings"     # each published briefing is also written here as JSON
+
+[window]
+hours = 30                         # how far back to accept articles
+
+# --- LM Studio (OpenAI-compatible local server) -----------------------------
+[lmstudio]
+base_url = "http://127.0.0.1:1234/v1"
+chat_model = ""                    # REQUIRED for real runs: the model identifier shown in LM Studio
+embedding_model = ""               # optional; empty = cluster with built-in word statistics instead
+temperature = 0.1
+request_timeout_s = 180            # one inference call may not run longer than this
+retries = 2                        # per call, after a failure or invalid JSON
+cooldown_s = 1.0                   # pause between calls so the machine is never pinned
+max_prompt_chars = 14000           # hard cap on prompt size (roughly 3.5k tokens)
+max_output_tokens = 900
+model_ttl_s = 0                    # >0 asks LM Studio to unload the model after this idle time
+
+# --- Hard limits for one run -------------------------------------------------
+[limits]
+max_articles = 300                 # newest first; the rest are ignored for this run
+max_candidate_events = 40          # clusters sent to ranking
+max_stories = 12                   # stories in the published briefing
+max_stories_per_section = 3
+max_articles_per_event = 5         # source passages given to the model per story
+max_chars_per_article = 1500
+max_llm_calls = 80                 # run stops asking the model after this many calls
+max_run_minutes = 45               # after this, publish what is finished
+# Inference is always sequential: one request at a time, never in parallel.
+
+[clustering]
+embedding_threshold = 0.78
+lexical_threshold = 0.30
+
+[api]
+host = "127.0.0.1"                 # use 0.0.0.0 to test from a phone on the same network
+port = 8000
+# The token is read from the WORLDBRIEF_API_TOKEN environment variable, never from this file.
+
+# --- Feeds --------------------------------------------------------------------
+# A small starter set. Check each outlet's terms of use before relying on it.
+# These URLs were not reachable from the environment this was written in, so
+# treat them as unverified; a feed that fails is logged and skipped.
+# region_hint is used only when the model cannot place a story.
+
+[[feeds]]
+id = "bbc-world"
+name = "BBC News"
+country = "United Kingdom"
+type = "broadcaster"
+homepage = "https://www.bbc.com/news/world"
+url = "https://feeds.bbci.co.uk/news/world/rss.xml"
+
+[[feeds]]
+id = "aljazeera"
+name = "Al Jazeera"
+country = "Qatar"
+type = "broadcaster"
+homepage = "https://www.aljazeera.com"
+url = "https://www.aljazeera.com/xml/rss/all.xml"
+
+[[feeds]]
+id = "dw-world"
+name = "Deutsche Welle"
+country = "Germany"
+type = "broadcaster"
+homepage = "https://www.dw.com"
+url = "https://rss.dw.com/rdf/rss-en-world"
+
+[[feeds]]
+id = "france24"
+name = "France 24"
+country = "France"
+type = "broadcaster"
+homepage = "https://www.france24.com/en/"
+url = "https://www.france24.com/en/rss"
+
+[[feeds]]
+id = "un-news"
+name = "UN News"
+country = "International"
+type = "agency"
+homepage = "https://news.un.org/en/"
+url = "https://news.un.org/feed/subscribe/en/news/all/rss.xml"
+
+[[feeds]]
+id = "guardian-world"
+name = "The Guardian"
+country = "United Kingdom"
+type = "newspaper"
+homepage = "https://www.theguardian.com/world"
+url = "https://www.theguardian.com/world/rss"

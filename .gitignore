@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.venv/
+
+# Backend runtime data and local settings
+backend/data/
+backend/config.toml
+
+# Android / Gradle
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/.kotlin/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
