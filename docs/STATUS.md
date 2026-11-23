@@ -1,6 +1,6 @@
 # Status
 
-Last updated 2026-11-23, after the first run on the Windows desktop (Review Directive 02).
+Last updated 2026-11-23, after the first successful Android build and the editorial-correctness round.
 Git: `baseline-0.1` is the code as first delivered; this work is on branch `directive-01`.
 
 Three levels are used and kept apart:
@@ -8,6 +8,36 @@ Three levels are used and kept apart:
 - **Verified**: run, with the result observed. Evidence is in `reports/`.
 - **Implemented**: written, not yet run in a way that proves it.
 - **Planned**: not written.
+
+## Android: first successful build (2026-11-23)
+
+GitHub Actions, run on the first push, with no source changes needed:
+
+- `compileDebugKotlin`, `kspDebugKotlin` (Room), `testDebugUnitTest` and `assembleDebug` all passed. **BUILD SUCCESSFUL in 2m 14s.**
+- One compiler warning: a deprecated text-field API in the settings screen.
+- Toolchain as pinned: AGP 9.5.1, Gradle 9.6.0, Kotlin 2.4.21, KSP 2.3.13, Compose BOM 2026.11.01, compileSdk 37.1.
+- Full job log: `reports/android-ci/2026-11-23-first-successful-build.log`. The APK is the `worldbrief-debug-apk` artifact on that run (14.3 MB).
+
+What this does and does not establish: the app compiles, its unit tests pass, and an installable debug APK exists. **Nobody has installed or opened it.** Screens, Room at runtime, sync against the real server, and text-to-speech are still untested.
+
+## Editorial-correctness round (after the first real briefing)
+
+Driven by what the first real briefing got wrong (listed below) and by a claim-by-claim review (`benchmarks/2026-11-23-first-real-run/REVIEW-SUMMARY.md`): of 21 claims published as supported, 16 were correct, 3 dropped an attribution and 2 came from an opinion column.
+
+| Problem observed | Change | Checked how |
+|---|---|---|
+| Wrong sections | Region is looked up from place names (`geo.py`, about 190 countries with cities and nationalities). The model only chooses region versus topic, and a topic needs support in the headlines. Countries come from the reports, not the model. | Re-run of the rules over the first run's articles: all twelve stories land where a reader would expect. Tests in `test_editorial.py`. |
+| Opinion as fact | Articles are sorted by address and headline into news, opinion, analysis, live and sport. Only news is a source of claims. | On the first run's 97 articles: 75 news, 10 analysis, 6 sport, 4 live, 2 opinion. Both opinion columns are excluded. |
+| Dropped attribution, unattributed judgement, forecasts | Claims are marked partly confirmed when the source attributes and the claim does not, or when a judgement word has no owner. Each claim carries `nature`: event, statement or forecast. | Tests. |
+| One event split into several stories | Clustering now weights names, acronyms and countries, uses average-link grouping, and joins reports naming the same coded event (COP31, G20). | On the first run's articles: 85 usable articles form 52 events, 12 of them with two or more independent sources, against 3 before. The largest story of the day, missed entirely by the first briefing, is now one seven-report event. |
+| United States domestic story at importance 4 | A story set only in the United States is capped at importance 2. | Test. |
+| True claims removed; harmless wording flagged | Name-order rule narrowed to real role swaps; alternative country names accepted; qualifiers read only from the part of the sentence the claim uses; long run-on passages cut into windows. | Tests reproducing each case. |
+
+Backend suite: **81 tests pass.**
+
+**Not yet verified:** these changes have not been through a second real run. The clustering and section results above come from re-running the deterministic stages on the first run's stored articles, which is real data but the same day the rules were tuned on. Whether the claim rules behave on fresh model output is unknown.
+
+Known weak points of the new rules: the article sorter is conservative (a news report with a question for a headline is treated as analysis, and feature sections are excluded wholesale); the place table has no people and few cities; topic vocabulary is a short word list; "may" the month still reads as a hedge.
 
 ## First run on the Windows desktop (2026-11-23, 05:35 local)
 
@@ -20,7 +50,7 @@ Three levels are used and kept apart:
 | Six starter feeds, live | **All six OK**: 170 entries, every one usable. | `benchmarks/.../feeds.json` |
 | LM Studio reachable | OK. LM Studio 0.4.28. | `benchmarks/.../lmstudio-models.txt` |
 | Real run, real feeds, real model | **Published, state `complete`**: 12 stories from 97 articles. | `benchmarks/2026-11-23-first-real-run/MEASUREMENTS.md` |
-| Android build | **Failed before starting**: no Java on the machine (`JAVA_HOME is not set and no 'java' command could be found`). Android Studio and the Android SDK are not installed either. | `android-build.log` |
+| Android build on the desktop | **Failed before starting**: no Java on the machine. Android Studio and the Android SDK are not installed either. The build was done on GitHub instead (above). | `reports/windows-2026-11-23/android-build.log` |
 
 Real-run measurements:
 
@@ -40,7 +70,7 @@ Found by reading it. The briefing itself is in `benchmarks/2026-11-23-first-real
 3. **Clustering was weak.** 97 articles became 74 events; two reports of one summit became two stories. Nine of twelve stories rested on one source.
 4. **A United States domestic story was selected** at importance 4.
 5. **No story had an event date.**
-6. **The rules over-removed.** Two of the three removals look like true claims removed by the name-order rule. One removal was right: the model attributed a figure to an outlet that never reported it.
+6. **The rules over-removed.** Two of the three removals were true claims removed by the name-order rule. The third is debatable. (An earlier version of this note said the model had invented that claim. It had not: the outlet did report the figure.)
 7. **"Why it matters" survived for only 3 of 12 stories.**
 
 ## Verified
@@ -80,8 +110,7 @@ So one of six is confirmed. `python -m worldbrief check-feeds` on the desktop se
 
 | What | How to verify |
 |---|---|
-| The Android app as a whole, and its toolchain versions | A Gradle build. Needs a JDK and the Android SDK, which the desktop does not have, or GitHub Actions. |
-| Android handling of `partial` briefings and `unchecked` claims (DTO, Room columns, screens) | A Gradle build; `DemoDataTest` covers the mapping. |
+| The Android app at runtime: screens, Room, sync, narration, partial and unchecked labels | Install the APK on a phone or emulator. It compiles and its unit tests pass; nothing more is known. |
 | Bookmarks surviving regeneration on the phone | Follows from stable story ids (tested in the backend) and bookmarks being keyed by story id. Needs an on-device check. |
 | Embedding-based clustering | Set `lmstudio.embedding_model`. |
 

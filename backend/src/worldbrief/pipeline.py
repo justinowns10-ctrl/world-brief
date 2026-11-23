@@ -26,9 +26,9 @@ import jsonschema
 from . import PIPELINE_VERSION, REGION_SECTIONS, db
 from .cluster import cluster_articles
 from .config import Config
-from .ingest import fetch_feed, independent_source_count, mark_duplicates, parse_feed_detailed
+from .ingest import fetch_feed, independent_source_count, label_kinds, mark_duplicates, parse_feed_detailed
 from .lm import BudgetExceeded, LMError
-from .rank import describe_clusters, rank_events, select_events
+from .rank import apply_editorial_rules, describe_clusters, rank_events, select_events
 from .summarize import choose_passages, draft_event
 from .text import clean_text
 from .validate import safe_text, supported_event_date, validate_event
@@ -86,11 +86,11 @@ def build_story(story_id: str, articles: list[dict], passages: list[dict], draft
         if a not in listed and not a.get("withheld") and len(listed) < MAX_ARTICLES_LISTED:
             listed.append(a)
     source_text = " ".join(f"{p['title']}. {p['text']}" for p in passages)
-    independent = independent_source_count(listed)
+    independent = independent_source_count([a for a in listed if a.get("kind", "news") == "news"])
     claims = []
     for n, c in enumerate(checked["claims"], start=1):
         claims.append({
-            "id": f"c{n}", "text": c["text"], "support": c["support"], "note": c["note"],
+            "id": f"c{n}", "text": c["text"], "support": c["support"], "nature": c["nature"], "note": c["note"],
             "evidence": [{"articleId": e["passage"]["article"]["id"], "quote": e["quote"]} for e in c["evidence"]],
         })
     partial = sum(1 for c in claims if c["support"] == "partial")
@@ -104,6 +104,9 @@ def build_story(story_id: str, articles: list[dict], passages: list[dict], draft
         notes.append(drafted_uncertainty)
     if checked["conflict"]:
         notes.append("Sources conflict: " + (checked["conflict_note"] or "the cited reports disagree on a material point."))
+    forecasts = sum(1 for c in claims if c["nature"] == "forecast")
+    if forecasts:
+        notes.append(f"{forecasts} statement(s) describe what is expected or possible, not something that has happened.")
     if independent <= 1:
         notes.append("Based on a single independent source.")
     if partial:
@@ -185,15 +188,29 @@ def run_pipeline(cfg: Config, model, conn, briefing_date: str | None = None, now
             fail("no articles in the time window")
             return None
 
+        kinds = label_kinds(articles)
+        stats["article_kinds"] = kinds
+        set_aside = {k: n for k, n in kinds.items() if k not in ("news", "analysis")}
+        if set_aside:
+            note("ingest", "info", "set aside, not used: " + ", ".join(f"{n} {k}" for k, n in sorted(set_aside.items())))
+        # Opinion, live pages and sport take no part. Analysis and explainers may be grouped
+        # with the event they discuss, but are never used as a source of claims.
+        articles = [a for a in articles if a["kind"] in ("news", "analysis")]
+        if not any(a["kind"] == "news" for a in articles):
+            fail("no news reports in the time window")
+            return None
+
         mark_duplicates(articles)
         clusters, method = cluster_articles(articles, model, cfg.clustering.embedding_threshold,
-                                            cfg.clustering.lexical_threshold)
+                                            cfg.clustering.event_threshold)
         stats.update(clusters=len(clusters), clustering=method)
         note("cluster", "info", f"{len(articles)} articles grouped into {len(clusters)} events ({method})")
 
         feeds_by_id = {f.id: f for f in cfg.feeds}
         descriptions = describe_clusters(clusters, feeds_by_id)
         ranking, rank_budget_hit = rank_events(descriptions, model, cfg.limits.max_candidate_events)
+        for change in apply_editorial_rules(descriptions, ranking, clusters):
+            note("rank", "info", "rule: " + change)
         chosen = select_events(descriptions, ranking, cfg.limits.max_stories, cfg.limits.max_stories_per_section)
         by_rule = sum(1 for cid in chosen if ranking[cid].get("by_rule"))
         note("rank", "info", f"{len(chosen)} events selected" + (f", {by_rule} ranked by rule" if by_rule else ""))
@@ -279,8 +296,9 @@ def run_pipeline(cfg: Config, model, conn, briefing_date: str | None = None, now
         coverage_notes.append("Summaries are based on the excerpts publishers put in their feeds, not full articles.")
         if getattr(model, "is_stand_in", False):
             coverage_notes.append("Produced with the rule-based stand-in, not a language model. For testing only.")
-        if method == "lexical":
-            coverage_notes.append("Events were grouped by word overlap; no embedding model was configured.")
+        if set_aside:
+            coverage_notes.append("Not used as sources: " + ", ".join(f"{n} {k}" for k, n in sorted(set_aside.items()))
+                                  + " item(s). Opinion and commentary are never reported as fact.")
         state = "partial" if reasons else "complete"
         briefing = {
             "schemaVersion": 1,

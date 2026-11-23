@@ -72,6 +72,14 @@ Story status:
 - `verified`: two or more independent sources, every published claim `supported`, and the model check ran.
 - `preliminary`: everything else.
 
+### Editorial rules that do not depend on the model
+
+- **What kind of article it is** (`ingest.article_kind`): news, opinion, analysis, live or sport, from the address and headline. Only news is a source of claims. Analysis may be grouped with its event as related reading.
+- **Where it happened** (`geo.py`): countries are found by place names and nationalities; the section is the region with the most mentions, headlines counting triple. The United States yields to another region with at least half its score, since it is often an actor in a story set elsewhere.
+- **Region or topic**: the model proposes; a topic section is accepted only if the headlines use that topic's vocabulary, or if the event spans regions and most headlines describe it in that topic's terms.
+- **United States only**: capped at importance 2.
+- **What kind of claim it is** (`validate.claim_nature`): event, statement or forecast, from its wording.
+
 ### Untrusted article text
 
 Feed text is treated as hostile input. Sentences that read as instructions to a model are removed before a passage is shown to the model, and an article whose headline is such an instruction is withheld entirely. Both prompts tell the model that passages are material to report on, not instructions. Whatever the model writes still has to pass validation against the cleaned passages.

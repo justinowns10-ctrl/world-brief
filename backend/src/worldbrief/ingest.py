@@ -166,3 +166,55 @@ def independent_source_count(articles: list[dict]) -> int:
         else:
             keys.add("src:" + a["source_id"])
     return len(keys)
+
+
+# ---------------------------------------------------------------- kinds of article
+
+_OPINION_PATH = re.compile(r"/(opinions?|commentisfree|comment|commentary|editorials?|letters|columnists?|columns?|"
+                           r"voices|blogs?|perspectives?|op-?eds?|viewpoints?)(/|$)", re.I)
+_OPINION_TITLE = re.compile(r"^(opinion|editorial|comment|commentary|letters?|column|viewpoint|the \w+ view on)\b[:| ]"
+                            r"|\|\s*(opinion|editorial|letters?|comment)\s*$", re.I)
+_ANALYSIS_PATH = re.compile(r"/(analysis|explainers?|features?|tv-shows|long-?reads?|interactive|podcasts?|newsletters?|"
+                            r"in-depth|magazine|briefings?)(/|$)", re.I)
+_ANALYSIS_TITLE = re.compile(
+    r"^(analysis|explainer|explained|q&a|fact check|profile|interview|watch|listen)\b[:| ]"
+    r"|\b(briefing|takeaways|what we know|what to know|explained|timeline|at a glance|in pictures|podcast)\b"
+    r"|^(why|how|what|who|when|where|is|are|was|were|can|could|will|would|should|does|do|did)\b.*\?"
+    r"|\?\s*$", re.I)
+_LIVE = re.compile(r"/live(/|-|$)|/live-blog", re.I)
+_LIVE_TITLE = re.compile(r"^live\b[:| ]|[–-]\s*(\w+\s+)?live\s*$|as it happened|live updates", re.I)
+_SPORT = re.compile(r"/(sports?|football|soccer|cricket|tennis|rugby|golf|formula-?1|nba|nfl|olympics)(/|$)", re.I)
+_SPORT_TITLE = re.compile(r"^(ligue 1|premier league|la liga|serie a|bundesliga|champions league|nba|nfl|atp|wta)\b", re.I)
+
+REPORTING_KINDS = ("news",)
+
+
+def article_kind(article: dict) -> str:
+    """Sorts an article by what kind of journalism it is, from its address and
+    headline alone: 'news', 'opinion', 'analysis', 'live' or 'sport'.
+
+    Only 'news' is used as a source of factual claims. Opinion states
+    judgements, analysis and explainers state interpretation, live pages
+    change under the reader, and sport is outside this briefing's remit.
+    The test is deliberately simple and errs toward excluding: a news report
+    with a question for a headline is treated as analysis.
+    """
+    url, title = article.get("url", ""), article.get("title", "")
+    if _OPINION_PATH.search(url) or _OPINION_TITLE.search(title):
+        return "opinion"
+    if _SPORT.search(url) or _SPORT_TITLE.search(title):
+        return "sport"
+    if _LIVE.search(url) or _LIVE_TITLE.search(title):
+        return "live"
+    if _ANALYSIS_PATH.search(url) or _ANALYSIS_TITLE.search(title):
+        return "analysis"
+    return "news"
+
+
+def label_kinds(articles: list[dict]) -> dict[str, int]:
+    """Sets article['kind'] in place and returns a count per kind."""
+    counts: dict[str, int] = {}
+    for a in articles:
+        a["kind"] = article_kind(a)
+        counts[a["kind"]] = counts.get(a["kind"], 0) + 1
+    return counts

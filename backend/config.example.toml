@@ -35,8 +35,8 @@ max_run_minutes = 45               # after this, publish what is finished
 # Inference is always sequential: one request at a time, never in parallel.
 
 [clustering]
-embedding_threshold = 0.78
-lexical_threshold = 0.30
+embedding_threshold = 0.78         # used when an embedding model is set
+event_threshold = 0.22             # used otherwise: names-and-words similarity needed to join an event
 
 [api]
 host = "127.0.0.1"                 # use 0.0.0.0 to test from a phone on the same network

@@ -55,7 +55,10 @@ SUMMARY_SYSTEM = (
 
 def choose_passages(articles: list[dict], max_articles: int, max_chars: int) -> list[dict]:
     """Prefers one article per outlet and original reporting over copies."""
-    ordered = sorted(articles, key=lambda a: (a.get("role") == "syndicated", a["published_at"]))
+    # Only news reports are sources of claims; commentary and explainers may sit in the
+    # cluster as related reading but are never shown to the model as fact.
+    reports = [a for a in articles if a.get("kind", "news") == "news"]
+    ordered = sorted(reports, key=lambda a: (a.get("role") == "syndicated", a["published_at"]))
     picked, seen = [], set()
     for a in ordered:
         if a["source_id"] not in seen:

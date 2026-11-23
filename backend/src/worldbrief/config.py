@@ -47,7 +47,8 @@ class Limits:
 @dataclass
 class Clustering:
     embedding_threshold: float = 0.78
-    lexical_threshold: float = 0.30
+    event_threshold: float = 0.22
+    lexical_threshold: float = 0.30   # no longer used; accepted so existing config files still load
 
 
 @dataclass

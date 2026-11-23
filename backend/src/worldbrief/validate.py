@@ -31,6 +31,7 @@ import logging
 import re
 from datetime import date, datetime, timedelta
 
+from .geo import same_place_names
 from .lm import LMError
 from .text import STOPWORDS, clean_text, looks_like_instruction, normalize, sentences, tokens
 
@@ -68,6 +69,28 @@ OPPOSITES: dict[str, set[str]] = {}
 for _a, _b in _OPPOSITES:
     OPPOSITES.setdefault(_a, set()).add(_b)
     OPPOSITES.setdefault(_b, set()).add(_a)
+
+# The source says who said it. A claim that keeps none of these states someone's account as fact.
+ATTRIBUTION = frozenset(
+    "said says say saying according told tells stated states announced announces reported reports report "
+    "finds found warned warns argued argues claimed claims claiming alleged alleges accused accuses believes "
+    "described describes called calls insisted insists denied denies acknowledged admitted confirmed confirms "
+    "estimated estimates suggested suggests predicted predicts blamed blames condemned criticised criticized "
+    "slams slammed decries decried brands branded urged urges vowed vows promised promises".split()
+)
+# Words that describe what may happen, not what has.
+FORECAST = frozenset(
+    "will would could may might expected expects likely unlikely plans planned planning set poised due forecast "
+    "forecasts predicted predicts projected projects threatens threatened aims intends proposed proposes "
+    "upcoming possible possibly potential potentially".split()
+)
+# Judgement words. Stated without attribution they are opinion, not reporting.
+EVALUATIVE = frozenset(
+    "worst best lazy irresponsible disastrous shameful brilliant reckless outrageous appalling heroic cowardly "
+    "catastrophic disgraceful absurd ridiculous brutal barbaric corrupt incompetent hypocritical beholden "
+    "scandalous shocking terrible wonderful excellent pathetic foolish stupid evil heartless cruel symptom "
+    "betrayal farce sham travesty".split()
+)
 
 # Words that assert one thing caused another.
 CAUSAL = frozenset(
@@ -140,41 +163,71 @@ def unseen_numbers(text: str | None, source_text: str) -> set[str]:
 
 
 def unseen_names(text: str | None, source_text: str) -> set[str]:
+    """Names in the text that the source never uses. A different name for a
+    country the source does mention ("Democratic Republic of Congo" for
+    "DR Congo") is not a new name."""
     haystack = f" {normalize(source_text)} "
-    return {n for n in names_in(text or "") if f" {n} " not in haystack}
+    known_places = same_place_names(source_text)
+    return {n for n in names_in(text or "") if f" {n} " not in haystack and n not in known_places}
 
 
 def content_tokens(text: str) -> set[str]:
     return {t for t in tokens(text) if not t.isdigit()}
 
 
+WINDOW_WORDS = 45
+
+
+def passage_units(text: str) -> list[str]:
+    """Sentences, with any over-long one cut into overlapping windows. Feed text
+    often runs a standfirst into the body with no full stop; treating that as
+    one "sentence" made the first real run quote the wrong part of it."""
+    units = []
+    for sentence in sentences(text) or ([text] if text else []):
+        words = sentence.split()
+        if len(words) <= WINDOW_WORDS:
+            units.append(sentence)
+        else:
+            step = WINDOW_WORDS // 3
+            for start in range(0, max(len(words) - step, 1), step):
+                units.append(" ".join(words[start:start + WINDOW_WORDS]))
+    return units
+
+
 def locate(needle: str, haystack: str, threshold: float) -> str | None:
-    """Finds the source text that corresponds to `needle`. Returns text from the
-    source itself, or None."""
+    """Retrieval: finds the stretch of source text that corresponds to `needle`.
+    Returns text from the source itself, or None. Finding a match establishes
+    where a statement could have come from, nothing more."""
     if not needle or not haystack:
         return None
+    units = passage_units(haystack)
     n = normalize(needle)
-    if len(n.split()) >= 4 and n in normalize(haystack):
-        for sentence in sentences(haystack):
-            if n in normalize(sentence):
-                return sentence[:400]
-        return needle.strip()[:400]
+    if len(n.split()) >= 4:
+        exact = [u for u in units if n in normalize(u)]
+        if exact:
+            return min(exact, key=len)[:400]
     wanted = set(tokens(needle))
     if len(wanted) < 3:
         return None
     best, best_score = None, 0.0
-    for sentence in sentences(haystack):
-        score = len(wanted & set(tokens(sentence))) / len(wanted)
+    for unit in units:
+        found = len(wanted & set(tokens(unit)))
+        score = found / len(wanted) - 0.0005 * len(unit)       # prefer the tighter match
         if score > best_score:
-            best, best_score = sentence, score
-    return best[:400] if best is not None and best_score >= threshold else None
+            best, best_score = unit, score
+    return best[:400] if best is not None and best_score + 0.0005 * len(best) >= threshold else None
 
 
 def qualifiers_dropped(claim: str, passage_sentence: str) -> tuple[set[str], set[str]]:
     """Negations and hedges that are in the source sentence but not in the claim."""
     in_claim = set(_WORD.findall(claim.lower()))
     in_source = set(_WORD.findall(passage_sentence.lower()))
-    return (in_source & NEGATIONS) - in_claim, (in_source & HEDGES) - in_claim
+    hedges = (in_source & HEDGES) - in_claim
+    if in_claim & ATTRIBUTION:
+        # "X described the bill as lazy" already says whose view it is; the source's
+        # "claimed"/"claiming" is the same information, not a lost qualifier.
+        hedges -= {"claimed", "claims", "claiming", "alleged", "allegedly", "reportedly"}
+    return (in_source & NEGATIONS) - in_claim, hedges
 
 
 def reversed_terms(claim: str, passage_sentence: str) -> set[str]:
@@ -196,12 +249,69 @@ def ordered_names(text: str) -> list[str]:
 
 
 def names_reordered(claim: str, passage_sentence: str) -> bool:
-    """True when names shared by claim and source appear in a different order,
-    which is how 'A attacked B' becomes 'B attacked A'. A legitimate passive
-    rewrite also trips this; losing that claim is the accepted cost."""
-    theirs = ordered_names(passage_sentence)
-    shared = [n for n in ordered_names(claim) if n in theirs]
-    return len(shared) >= 2 and shared != [n for n in theirs if n in shared]
+    """True when two names have traded places around the same words, which is
+    how 'A sent troops into B' becomes 'B sent troops into A'.
+
+    The first real run showed that order alone is not enough: "Russia
+    intensified attacks on the Kyiv region" was removed because its source
+    read "... killed in Kyiv region as Russia intensifies attacks". So a swap
+    counts only if the words between the two names are shared: in a true role
+    swap the verb phrase stays put and the names exchange sides.
+    """
+    claim_words = _WORD_ANY.findall(claim)
+    source_words = _WORD_ANY.findall(passage_sentence)
+    claim_names, source_names = ordered_names(claim), ordered_names(passage_sentence)
+    shared = [n for n in claim_names if n in source_names]
+    for i, first in enumerate(shared):
+        for second in shared[i + 1:]:
+            if source_names.index(first) < source_names.index(second):
+                continue                                   # same order in both
+            between_claim = _between(claim_words, first, second)
+            between_source = _between(source_words, second, first)
+            if between_claim and between_source and (
+                    {w for w in between_claim if w not in STOPWORDS} & {w for w in between_source if w not in STOPWORDS}):
+                return True
+    return False
+
+
+_WORD_ANY = re.compile(r"[A-Za-z][A-Za-z'-]*")
+
+
+def _between(words: list[str], first: str, second: str) -> list[str]:
+    lowered = [w.lower().removesuffix("'s") for w in words]
+    try:
+        start = lowered.index(first)
+        end = lowered.index(second, start + 1)
+    except ValueError:
+        return []
+    return lowered[start + 1:end]
+
+
+def attribution_dropped(claim: str, passage_sentence: str) -> set[str]:
+    """Attribution words in the source sentence when the claim has none at all.
+    'The report finds X' turned into plain 'X' states someone's finding as fact."""
+    in_claim = set(_WORD.findall(claim.lower()))
+    if in_claim & ATTRIBUTION or any(q in claim for q in '"“‘'):
+        return set()
+    return set(_WORD.findall(passage_sentence.lower())) & ATTRIBUTION
+
+
+def claim_nature(claim: str) -> str:
+    """'statement' if the claim reports what someone said, 'forecast' if it
+    describes what may happen, otherwise 'event'."""
+    words = set(_WORD.findall(claim.lower()))
+    if words & ATTRIBUTION or any(q in claim for q in '"“'):
+        return "statement"
+    if words & FORECAST:
+        return "forecast"
+    return "event"
+
+
+def unattributed_judgement(claim: str) -> set[str]:
+    words = set(_WORD.findall(claim.lower()))
+    if words & ATTRIBUTION or any(q in claim for q in '"“‘'):
+        return set()
+    return words & EVALUATIVE
 
 
 def unstated_cause(text: str, source_text: str) -> set[str]:
@@ -301,11 +411,26 @@ def safe_headline(drafted, passages: list[dict]) -> str:
     return headline
 
 
+def focus(claim: str, unit: str, before: int = 4, after: int = 2) -> str:
+    """The part of a source sentence the claim actually draws on: from its first
+    to its last word shared with the claim, plus a few words either side
+    (qualifiers such as "denied reports that" or "may" sit just before).
+    A long sentence often qualifies some other clause; that must not count
+    against a claim about this one."""
+    words = unit.split()
+    wanted = set(tokens(claim))
+    hits = [i for i, w in enumerate(words) if set(tokens(w)) & wanted]
+    if not hits:
+        return unit
+    return " ".join(words[max(hits[0] - before, 0):hits[-1] + 1 + after])
+
+
 def _screen_claim(text: str, evidence: list[dict]) -> tuple[str | None, str | None, list[str]]:
     """Deterministic rules against the retrieved sentences.
     Returns (removal verdict or None, removal reason or None, downgrade notes)."""
     negated, hedged, flipped, causes = set(), set(), set(), set(CAUSAL)
     reordered = False
+    evidence = [{**e, "quote": focus(text, e["quote"])} for e in evidence]
     for e in evidence:
         n, h = qualifiers_dropped(text, e["quote"])
         negated |= n
@@ -328,6 +453,13 @@ def _screen_claim(text: str, evidence: list[dict]) -> tuple[str | None, str | No
         notes.append("the cited passage is less certain (" + ", ".join(sorted(hedged)) + ")")
     if causes:
         notes.append("the cited passage does not state this cause (" + ", ".join(sorted(causes)) + ")")
+    attributed = set().union(*(attribution_dropped(text, e["quote"]) for e in evidence)) if evidence else set()
+    if attributed:
+        notes.append("the source attributes this to someone (" + ", ".join(sorted(attributed))
+                     + "); the claim states it as fact")
+    judgement = unattributed_judgement(text)
+    if judgement:
+        notes.append("a judgement stated without saying whose it is (" + ", ".join(sorted(judgement)) + ")")
     return None, None, notes
 
 
@@ -390,6 +522,7 @@ def validate_event(draft: dict, passages: list[dict], model) -> dict:
             "text": text, "cited": [e["passage"] for e in evidence], "evidence": evidence,
             "verdict": "partial" if notes else "supported", "notes": notes,
             "verbatim": is_verbatim(text, [e["passage"] for e in evidence]), "judged": False,
+            "nature": claim_nature(text),
         })
 
     # Narrative fields get the deterministic screen first; survivors go to the model check.
@@ -466,7 +599,7 @@ def validate_event(draft: dict, passages: list[dict], model) -> dict:
             conflict = True
         if ok:
             published.append({
-                "text": c["text"], "support": c["verdict"],
+                "text": c["text"], "support": c["verdict"], "nature": c["nature"],
                 "note": "; ".join(c["notes"]) or None, "evidence": c["evidence"],
             })
     return {"claims": published, "audit": audit, "conflict": conflict,

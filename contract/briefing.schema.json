@@ -118,6 +118,10 @@
           "description": "supported: the checks found it borne out by its evidence. partial: only partly borne out; see note. unchecked: the model consistency check could not run; the claim is published only because it is word for word from its source. Unsupported and contradicted claims, and unchecked paraphrases, are never published."
         },
         "note": { "type": ["string", "null"], "description": "Why a claim is only partly supported." },
+        "nature": {
+          "enum": ["event", "statement", "forecast"],
+          "description": "event: something that happened. statement: what someone said, found or claimed. forecast: what is expected or possible. Assigned by rule from the claim's wording."
+        },
         "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/evidence" } }
       }
     },
