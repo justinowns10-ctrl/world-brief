@@ -43,6 +43,7 @@ import com.worldbrief.app.ui.components.CenteredMessage
 import com.worldbrief.app.ui.components.DemoBanner
 import com.worldbrief.app.ui.components.GroupHeader
 import com.worldbrief.app.ui.components.IconLabel
+import com.worldbrief.app.ui.components.NoticeBox
 import com.worldbrief.app.ui.components.Overline
 import com.worldbrief.app.ui.components.ScreenPadding
 import com.worldbrief.app.ui.components.StoryListItem
@@ -201,6 +202,15 @@ private fun BriefingContent(
                         "$syncMessage Showing the last downloaded briefing.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error,
+                    )
+                }
+                if (summary.isPartial) {
+                    Spacer(Modifier.height(16.dp))
+                    NoticeBox(
+                        title = "Partial edition",
+                        body = summary.partialReasons.joinToString(" ").ifBlank {
+                            "The run that produced this briefing did not finish everything it set out to do."
+                        },
                     )
                 }
                 if (summary.isDemo) {

@@ -67,11 +67,12 @@ def describe_clusters(clusters: list[list[dict]], feeds_by_id: dict) -> list[dic
     return out
 
 
-def rank_events(descriptions: list[dict], model, max_candidates: int, batch_size: int = 20) -> dict[int, dict]:
-    """Returns {cluster_id: {section, importance, countries}}. A failed batch falls
-    back to a rule so ranking never stops the run."""
+def rank_events(descriptions: list[dict], model, max_candidates: int, batch_size: int = 20) -> tuple[dict[int, dict], bool]:
+    """Returns ({cluster_id: {section, importance, countries}}, budget_exhausted).
+    A failed batch falls back to a rule so ranking never stops the run."""
     candidates = sorted(descriptions, key=lambda d: (d["prescore"], d["newest"]), reverse=True)[:max_candidates]
     results: dict[int, dict] = {}
+    budget_exhausted = False
     for start in range(0, len(candidates), batch_size):
         batch = candidates[start:start + batch_size]
         lines = []
@@ -90,6 +91,7 @@ def rank_events(descriptions: list[dict], model, max_candidates: int, batch_size
                         "countries": [c for c in event["countries"] if isinstance(c, str)][:6],
                     }
         except BudgetExceeded:
+            budget_exhausted = True
             log.warning("ranking: model call budget used up; remaining events ranked by rule")
         except LMError as exc:
             log.warning("ranking batch failed, ranked by rule instead: %s", exc)
@@ -100,7 +102,7 @@ def rank_events(descriptions: list[dict], model, max_candidates: int, batch_size
                 "countries": [],
                 "by_rule": True,
             })
-    return results
+    return results, budget_exhausted
 
 
 def select_events(descriptions: list[dict], ranking: dict[int, dict], max_stories: int, per_section: int) -> list[int]:

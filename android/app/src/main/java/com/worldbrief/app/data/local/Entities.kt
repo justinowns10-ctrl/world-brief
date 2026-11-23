@@ -16,6 +16,9 @@ data class BriefingEntity(
     val isDemo: Boolean,
     /** Coverage notes, one per line. */
     val coverageNotes: String,
+    val isPartial: Boolean,
+    /** Reasons the briefing is partial, one per line. */
+    val partialReasons: String,
     val downloadedAt: Long,
 )
 

@@ -17,6 +17,7 @@ from .text import canonical_url, clean_text, jaccard, normalize, tokens
 log = logging.getLogger("worldbrief.ingest")
 
 USER_AGENT = "WorldBrief/0.1 (personal news reader)"
+MAX_FEED_BYTES = 5_000_000
 _WIRE = re.compile(r"\((Reuters|AP|AFP|dpa|EFE|Xinhua|ANSA|PTI)\)|\b(Reuters|Associated Press|Agence France-Presse)\b")
 
 
@@ -28,6 +29,8 @@ def fetch_feed(feed: Feed, timeout_s: float = 20.0) -> bytes:
     with httpx.Client(timeout=timeout_s, follow_redirects=True, headers={"User-Agent": USER_AGENT}) as client:
         response = client.get(url)
         response.raise_for_status()
+        if len(response.content) > MAX_FEED_BYTES:
+            raise ValueError(f"feed is larger than {MAX_FEED_BYTES} bytes")
         return response.content
 
 
@@ -40,9 +43,22 @@ def _entry_time(entry) -> datetime | None:
 
 
 def parse_feed(feed: Feed, raw: bytes) -> list[dict]:
-    """Turns one feed into normalized article records. Entries without a link,
-    title or date are skipped: an undated report cannot be placed in a daily window."""
+    return parse_feed_detailed(feed, raw)[0]
+
+
+def parse_feed_detailed(feed: Feed, raw: bytes) -> tuple[list[dict], dict]:
+    """Turns one feed into normalized article records, plus facts about the feed
+    itself. Entries without a link, title or date are skipped: an undated report
+    cannot be placed in a daily window. Malformed XML is tolerated: whatever
+    entries the parser can recover are used, and the damage is reported."""
     parsed = feedparser.parse(raw)
+    info = {
+        "bytes": len(raw),
+        "entries": len(parsed.entries),
+        "malformed": bool(parsed.get("bozo")),
+        "parse_error": str(parsed.get("bozo_exception"))[:200] if parsed.get("bozo") else None,
+        "format": parsed.get("version") or None,
+    }
     out = []
     for entry in parsed.entries:
         try:
@@ -64,7 +80,37 @@ def parse_feed(feed: Feed, raw: bytes) -> list[dict]:
             })
         except Exception as exc:  # one bad entry must not lose the feed
             log.warning("feed %s: skipped an entry: %s", feed.id, exc)
-    return out
+    info["usable"] = len(out)
+    info["skipped"] = info["entries"] - len(out)
+    info["newest"] = max((a["published_at"] for a in out), default=None)
+    info["oldest"] = min((a["published_at"] for a in out), default=None)
+    info["median_text_chars"] = sorted(len(a["text"]) for a in out)[len(out) // 2] if out else 0
+    return out, info
+
+
+def probe_feed(feed: Feed, timeout_s: float = 20.0) -> dict:
+    """Fetches and parses one feed and reports what happened. Never raises."""
+    result = {"id": feed.id, "url": feed.url, "ok": False}
+    try:
+        raw = fetch_feed(feed, timeout_s)
+    except httpx.HTTPStatusError as exc:
+        result["error"] = f"HTTP {exc.response.status_code}"
+        return result
+    except Exception as exc:
+        result["error"] = f"{type(exc).__name__}: {str(exc)[:160]}"
+        return result
+    try:
+        _, info = parse_feed_detailed(feed, raw)
+    except Exception as exc:
+        result["error"] = f"could not be parsed: {type(exc).__name__}: {str(exc)[:160]}"
+        return result
+    result.update(info)
+    if info["usable"] == 0:
+        result["error"] = ("no usable entries" + (f" (malformed: {info['parse_error']})" if info["malformed"] else
+                                                   " (not a feed, empty, or entries lack link/title/date)"))
+    else:
+        result["ok"] = True
+    return result
 
 
 def full_text(article: dict) -> str:

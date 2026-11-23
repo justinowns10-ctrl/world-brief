@@ -20,3 +20,8 @@ android/.kotlin/
 # OS
 .DS_Store
 Thumbs.db
+
+# CI and local build output
+backend/pytest-output.txt
+android/android-build.log
+android/android-dependencies.txt

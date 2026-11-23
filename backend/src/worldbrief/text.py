@@ -48,3 +48,33 @@ def jaccard(a: set, b: set) -> float:
     if not a or not b:
         return 0.0
     return len(a & b) / len(a | b)
+
+
+# Text that reads as an instruction to a language model rather than as news.
+# Articles are untrusted input: such sentences are removed before a passage is
+# shown to the model, so nothing built on them can be matched to a source.
+_INJECTION = re.compile(
+    r"(ignore|disregard|forget|override)\s+(all\s+|any\s+|the\s+)?(previous|prior|above|earlier|preceding|your)\s+"
+    r"(instructions?|prompts?|rules|guidelines|directions)"
+    r"|system\s+prompt|new\s+instructions?\s*:"
+    r"|you\s+are\s+(now\s+)?(an?\s+)?(ai|assistant|language\s+model|chatbot|llm)\b"
+    r"|as\s+an\s+ai(\s+language)?\s+model"
+    r"|<\|im_(start|end)\|>|\[/?INST\]|</?(system|assistant|user)>|\bassistant\s*:"
+    r"|(respond|reply|answer|output)\s+only\s+with\b"
+    r"|do\s+not\s+(mention|reveal|disclose)\s+(this|these|the)\s+(instruction|prompt|message)"
+    r"|(include|add|insert|write|report|state|say|repeat)\s+(the\s+following|this)\s+(claim|sentence|text|statement|headline)"
+    r"|in\s+your\s+(summary|response|answer|output|briefing)\b",
+    re.I,
+)
+
+
+def looks_like_instruction(s: str) -> bool:
+    return bool(_INJECTION.search(s or ""))
+
+
+def strip_instructions(s: str) -> tuple[str, list[str]]:
+    """Returns (text without instruction-like sentences, the sentences removed)."""
+    kept, removed = [], []
+    for sentence in sentences(s) or ([s] if s else []):
+        (removed if looks_like_instruction(sentence) else kept).append(sentence)
+    return " ".join(kept), removed

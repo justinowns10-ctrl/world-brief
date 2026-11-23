@@ -79,6 +79,8 @@ fun BriefingDto.toRecords(nowMillis: Long): BriefingRecords {
             overview = overview,
             isDemo = isDemo,
             coverageNotes = coverage?.notes.orEmpty().joinToString("\n"),
+            isPartial = publication?.state == "partial",
+            partialReasons = publication?.reasons.orEmpty().joinToString("\n"),
             downloadedAt = nowMillis,
         ),
         sources = sources.map { SourceEntity(it.id, it.name, it.country, it.type, it.homepage) },
@@ -129,6 +131,8 @@ fun BriefingRow.toDomain(): BriefingSummary = BriefingSummary(
     overview = briefing.overview,
     isDemo = briefing.isDemo,
     coverageNotes = briefing.coverageNotes.split("\n").filter { it.isNotBlank() },
+    isPartial = briefing.isPartial,
+    partialReasons = briefing.partialReasons.split("\n").filter { it.isNotBlank() },
     storyCount = storyCount,
     isBookmarked = isBookmarked,
 )
@@ -141,7 +145,12 @@ fun StoryRow.toDomain(): Story? {
             Claim(
                 id = c.id,
                 text = c.text,
-                support = if (c.support == "supported") ClaimSupport.SUPPORTED else ClaimSupport.PARTIAL,
+                // Anything unrecognised is shown as the weaker "partial", never as supported.
+                support = when (c.support) {
+                    "supported" -> ClaimSupport.SUPPORTED
+                    "unchecked" -> ClaimSupport.UNCHECKED
+                    else -> ClaimSupport.PARTIAL
+                },
                 note = c.note,
                 evidence = c.evidence.map { Evidence(it.articleId, it.quote) },
             )

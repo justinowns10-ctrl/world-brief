@@ -1,0 +1,14 @@
+Android Kotlin sources: parse check only (NOT a build)
+Date: 2026-11-23
+Tool: Kotlin compiler 2.0.21 (the copy bundled with Gradle 8.14), run directly on app/src/**/*.kt
+Result: no syntax errors in any file.
+All other diagnostics were "unresolved reference" and errors that follow from it, because the
+Android SDK, AndroidX, Compose, Room and the serialization plugin were not available to the compiler.
+This proves the files are well-formed Kotlin. It does not prove they compile against the real
+libraries, with Kotlin 2.4.21, or that the app runs.
+
+Pure-Kotlin unit tests run with a minimal test runner (JUnit was not available):
+PASS NarrationScriptTest.briefingIsReadInSectionOrderWithOneIntroduction
+PASS NarrationScriptTest.statusAndUncertaintyAreSpoken
+PASS NarrationScriptTest.datesFormat
+DemoDataTest was not run: it needs the kotlinx.serialization compiler plugin.

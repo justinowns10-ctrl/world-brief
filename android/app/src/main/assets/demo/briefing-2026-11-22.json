@@ -6,6 +6,18 @@
   "title": "World Brief",
   "overview": "Demonstration edition: five sample developments.",
   "isDemo": true,
+  "publication": {
+    "state": "complete",
+    "reasons": [],
+    "events": {
+      "selected": 5,
+      "processed": 5,
+      "published": 5,
+      "skippedUnsupported": 0,
+      "skippedErrors": 0,
+      "unprocessed": 0
+    }
+  },
   "generator": {
     "pipelineVersion": "demo",
     "model": null

@@ -35,7 +35,12 @@ enum class StoryStatus(val key: String, val label: String) {
     }
 }
 
-enum class ClaimSupport { SUPPORTED, PARTIAL }
+/**
+ * SUPPORTED: the checks found the claim borne out by its evidence.
+ * PARTIAL: only partly borne out. UNCHECKED: the backend's consistency check
+ * could not run; the claim is shown only because it is word for word from its source.
+ */
+enum class ClaimSupport { SUPPORTED, PARTIAL, UNCHECKED }
 
 data class Evidence(val articleId: String, val quote: String)
 
@@ -99,6 +104,9 @@ data class BriefingSummary(
     val overview: String,
     val isDemo: Boolean,
     val coverageNotes: List<String>,
+    /** True when the run that produced this briefing was cut short or lost input. */
+    val isPartial: Boolean,
+    val partialReasons: List<String>,
     val storyCount: Int,
     val isBookmarked: Boolean,
 )

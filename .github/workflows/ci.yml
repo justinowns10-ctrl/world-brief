@@ -7,8 +7,12 @@ on:
 
 jobs:
   backend:
-    name: Backend tests
-    runs-on: ubuntu-latest
+    name: Backend tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -18,7 +22,14 @@ jobs:
         run: pip install -e "backend[dev]"
       - name: Test
         working-directory: backend
-        run: python -m pytest -q
+        shell: bash
+        run: python -m pytest -v 2>&1 | tee pytest-output.txt
+      - name: Keep the test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-pytest-${{ matrix.os }}
+          path: backend/pytest-output.txt
 
   android:
     name: Android build
@@ -32,19 +43,29 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Unit tests and debug APK
         working-directory: android
+        shell: bash
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon --stacktrace testDebugUnitTest assembleDebug
+          set -o pipefail
+          ./gradlew --no-daemon --stacktrace testDebugUnitTest assembleDebug 2>&1 | tee android-build.log
+      - name: Resolved dependency versions
+        if: always()
+        working-directory: android
+        shell: bash
+        run: ./gradlew --no-daemon :app:dependencies --configuration debugRuntimeClasspath > android-dependencies.txt 2>&1 || true
+      - name: Keep the complete build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build-log
+          path: |
+            android/android-build.log
+            android/android-dependencies.txt
+            android/app/build/reports
+          if-no-files-found: ignore
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
           name: worldbrief-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
-      - name: Upload build reports on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-build-reports
-          path: android/app/build/reports
-          if-no-files-found: ignore

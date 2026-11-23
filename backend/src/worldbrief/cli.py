@@ -7,6 +7,7 @@ import logging
 import os
 import secrets
 import sys
+import time
 from pathlib import Path
 
 from . import db
@@ -33,12 +34,56 @@ def cmd_run(args) -> int:
         return 2
     model = StandInModel() if args.stand_in else LMStudioClient(cfg.lmstudio, cfg.limits.max_llm_calls)
     conn = db.connect(cfg.resolve(cfg.paths.database))
-    briefing = run_pipeline(cfg, model, conn, briefing_date=args.date)
-    if briefing is None:
-        print("Nothing published. See the log for the reason.")
+    sampler = None
+    if args.report:
+        from .diagnostics import ResourceSampler
+        sampler = ResourceSampler().start()
+    started = time.monotonic()
+    briefing, error = None, None
+    try:
+        briefing = run_pipeline(cfg, model, conn, briefing_date=args.date)
+    except Exception as exc:   # still write the report: a failed run is a result too
+        error = exc
+    if sampler is not None:
+        from .diagnostics import build_report, write_report
+        report = build_report(cfg, model, conn, briefing, sampler.stop(), time.monotonic() - started)
+        summary = write_report(report, Path(args.report))
+        print(f"Report written: {args.report} and {summary}")
+    if error is not None:
+        print(f"Run failed: {error!r}", file=sys.stderr)
         return 1
-    print(f"Published {briefing['id']}: {len(briefing['stories'])} stories.")
+    if briefing is None:
+        print("Run failed: nothing published. Run `worldbrief status` for the reason.")
+        return 1
+    state = briefing["publication"]["state"]
+    print(f"Published {briefing['id']} ({state}): {len(briefing['stories'])} stories.")
+    for reason in briefing["publication"]["reasons"]:
+        print("  partial because:", reason)
     return 0
+
+
+def cmd_check_feeds(args) -> int:
+    """Fetches every configured feed once and reports what came back."""
+    from .ingest import probe_feed
+
+    cfg = load_config(args.config)
+    if not cfg.feeds:
+        print("No feeds configured.", file=sys.stderr)
+        return 2
+    results = [probe_feed(feed) for feed in cfg.feeds]
+    for r in results:
+        if r["ok"]:
+            flag = "OK (malformed XML, partly recovered)" if r["malformed"] else "OK"
+            print(f"{r['id']:16} {flag}: {r['usable']} usable of {r['entries']} entries, newest {r['newest']}, "
+                  f"typical excerpt {r['median_text_chars']} characters, format {r['format']}")
+        else:
+            print(f"{r['id']:16} FAILED: {r['error']}")
+    if args.report:
+        path = Path(args.report)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"checked_at": db.now_iso(), "feeds": results}, indent=2) + "\n", encoding="utf-8")
+        print("Report written:", path)
+    return 0 if all(r["ok"] for r in results) else 1
 
 
 def cmd_serve(args) -> int:
@@ -91,7 +136,8 @@ def cmd_status(args) -> int:
     if run is None:
         print("No runs yet.")
         return 0
-    print(f"Run {run['id']} for {run['briefing_id']}: {run['status']} ({run['started_at']} to {run['finished_at']})")
+    state = "pending" if run["status"] == "running" else run["status"]
+    print(f"Run {run['id']} for {run['briefing_id']}: {state} ({run['started_at']} to {run['finished_at']})")
     print("Stats:", run["stats"])
     for e in conn.execute("SELECT * FROM run_events WHERE run_id=? ORDER BY id", (run["id"],)):
         print(f"  {e['at']} {e['level']:5} {e['stage']:9} {e['message']}")
@@ -111,6 +157,10 @@ def cmd_token(args) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Windows consoles often cannot print every character in a headline; never crash on output.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="replace")
     parser = argparse.ArgumentParser(prog="worldbrief")
     parser.add_argument("--config", default="config.toml" if Path("config.toml").exists() else None)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -118,7 +168,13 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("run", help="fetch feeds and publish today's briefing")
     p.add_argument("--stand-in", action="store_true", help="use the rule-based stand-in instead of LM Studio (testing only)")
     p.add_argument("--date", help="briefing date, YYYY-MM-DD (default: today, UTC)")
+    p.add_argument("--report", metavar="FILE.json",
+                   help="also measure the run (model details, call timings, peak memory, validation results)")
     p.set_defaults(func=cmd_run)
+
+    p = sub.add_parser("check-feeds", help="fetch each configured feed once and report what came back")
+    p.add_argument("--report", metavar="FILE.json")
+    p.set_defaults(func=cmd_check_feeds)
 
     p = sub.add_parser("serve", help="start the API")
     p.add_argument("--host")

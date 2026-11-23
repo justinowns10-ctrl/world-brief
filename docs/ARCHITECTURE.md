@@ -12,7 +12,7 @@ The app never talks to LM Studio. LM Studio listens on localhost and only the ba
 
 ## The contract (schema version 1)
 
-A briefing has `sources` and `stories`. A story has:
+A briefing has `sources`, `stories` and `publication` (state, reasons, event counts). A story has:
 
 | Field | Meaning |
 |---|---|
@@ -20,7 +20,7 @@ A briefing has `sources` and `stories`. A story has:
 | `status` | `verified`, `preliminary` or `disputed` (rules below). |
 | `eventDate` | The day the event happened, only if a source states it. Otherwise null. |
 | `firstReportedAt`, `articles[].publishedAt` | Reporting dates. Kept separate from the event date. |
-| `claims[]` | The factual statements, in order. Each has `support` (`supported` or `partial`), an optional `note`, and `evidence[]`: an article id plus a passage from that article. |
+| `claims[]` | The factual statements, in order. Each has `support` (`supported`, `partial` or `unchecked`), an optional `note`, and `evidence[]`: an article id plus a passage from that article. |
 | `summary` | The claims joined. There is no factual text outside the claims. |
 | `whyItMatters`, `context` | Analysis and background. Labelled as such in the app; not presented as verified fact. |
 | `uncertainty` | What is unknown, single-sourced, partly confirmed, removed or in conflict. |
@@ -47,23 +47,49 @@ One model, three prompts. There are no separate "agents": a regional analyst wou
 
 ### Validation
 
+Word overlap is used only to find the source sentence a statement corresponds to. Finding it proves nothing: "A invaded B" and "B invaded A" overlap completely. Separate rules then accept, flag or remove.
+
 For every drafted claim, in order:
 
-1. **Provenance.** It must cite at least one passage that was actually shown to the model. A reference to anything else removes the claim. Because links are resolved from stored records by id, a fabricated URL cannot reach a briefing.
-2. **Passage match.** Text matching the claim or its quote must be found in a cited article. The published quote is taken from the stored source record, not from the model's output.
-3. **Figures and names.** Any number or capitalised name in the claim that is absent from the cited passages marks the claim `partial` with a note saying which.
-4. **Consistency check.** A second model call, given only the cited passages and the statements, returns `supported`, `partial`, `unsupported` or `contradicted` per statement, and says whether the passages disagree with each other.
-5. **Outcome.** The worse of steps 3 and 4 wins. `unsupported` and `contradicted` claims are removed and recorded in the `claim_audit` table with the reason. If the check cannot run, surviving claims are downgraded to `partial`. A story with no surviving claim is dropped.
+1. **Provenance.** It must cite at least one passage that was shown to the model. Links are resolved from stored records by id, so a fabricated URL cannot reach a briefing.
+2. **Retrieval.** A sentence matching the claim or its quote must be found in a cited article. The published quote is that source sentence, not the model's wording.
+3. **Removal rules.** The claim is removed if the source sentence negates it, if the claim adds a negation, if it swaps a term for its opposite, or if shared names appear in a different order.
+4. **Downgrade rules.** The claim becomes `partial` if the source hedges it, if it asserts a cause the source does not, if a figure or name is absent from the cited passages, or if another passage gives a different figure for the same point (which also marks the story as in conflict).
+5. **Model check.** A second call, given only the cited passages and the statements, returns `supported`, `partial`, `unsupported` or `contradicted` per statement, and says whether the passages disagree.
+6. **Outcome.** The worst result wins. `unsupported` and `contradicted` claims are removed and recorded in `claim_audit` with the reason.
+7. **No verdict.** If the model check did not run or skipped a claim, the claim is published only if it is one whole source sentence word for word, labelled `unchecked`. Paraphrases are removed.
+
+Other fields:
+
+- **Headline**: used only if every content word comes from the sources and it passes the removal rules; otherwise the lead outlet's own headline.
+- **Background**: must match a source sentence, pass the claim rules, and be approved by the model check.
+- **Why it matters**: no figure, name or causal word absent from the sources, and explicit approval from the model check. Never published unchecked.
+- **Event date**: kept only if a passage states it (day and month, a weekday within the prior week, "today", "yesterday"). Otherwise null.
 
 Story status:
 
 - `disputed`: the sources conflict, or a claim was contradicted.
-- `verified`: two or more independent sources, every published claim `supported`, and the consistency check ran.
+- `verified`: two or more independent sources, every published claim `supported`, and the model check ran.
 - `preliminary`: everything else.
 
-Analysis and background text is dropped if it contains a figure that appears in no source.
+### Untrusted article text
 
-What this does and does not show: it shows that published statements are what the cited reports say. It does not show the reports are true. The app says so on every story.
+Feed text is treated as hostile input. Sentences that read as instructions to a model are removed before a passage is shown to the model, and an article whose headline is such an instruction is withheld entirely. Both prompts tell the model that passages are material to report on, not instructions. Whatever the model writes still has to pass validation against the cleaned passages.
+
+### Publication states
+
+| State | Meaning | Where it appears |
+|---|---|---|
+| `pending` | A run is in progress, or none has started. | `GET /v1/status`, `worldbrief status` |
+| `complete` | Published, nothing cut short. | briefing `publication.state`, briefing list, status |
+| `partial` | Published, but a feed could not be read, a story was lost to an error, verification could not finish for a story, or the budget or time limit stopped the run. `publication.reasons` says which; `publication.events` gives the counts. | same |
+| `failed` | Nothing published. An earlier briefing for that date is left in place. | status only: there is no briefing to carry it |
+
+A run found still marked as running when the next one starts was interrupted and is recorded as failed.
+
+### Story identity
+
+A story's id is the briefing date plus the id of the earliest report of that event. Regenerating a briefing keeps the id even if the order or the set of articles changes, so saved stories on the phone keep pointing at the same event.
 
 ### Workload limits
 

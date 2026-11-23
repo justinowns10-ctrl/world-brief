@@ -6,6 +6,18 @@
   "title": "World Brief",
   "overview": "Demonstration edition: twelve sample developments across six regions and five topics.",
   "isDemo": true,
+  "publication": {
+    "state": "complete",
+    "reasons": [],
+    "events": {
+      "selected": 12,
+      "processed": 12,
+      "published": 12,
+      "skippedUnsupported": 0,
+      "skippedErrors": 0,
+      "unprocessed": 0
+    }
+  },
   "generator": {
     "pipelineVersion": "demo",
     "model": null

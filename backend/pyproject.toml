@@ -18,6 +18,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
+measure = ["psutil>=5.9"]   # system memory in `worldbrief run --report`
 
 [project.scripts]
 worldbrief = "worldbrief.cli:main"
@@ -30,3 +31,4 @@ worldbrief = ["briefing.schema.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["tests"]

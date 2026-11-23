@@ -224,9 +224,14 @@ private fun Block(label: String, text: String) {
 private fun ClaimItem(claim: Claim, articlesById: Map<String, ArticleRef>) {
     Column(Modifier.padding(top = 14.dp)) {
         Text(claim.text, style = MaterialTheme.typography.bodyMedium)
-        if (claim.support == ClaimSupport.PARTIAL) {
+        val caution = when (claim.support) {
+            ClaimSupport.SUPPORTED -> null
+            ClaimSupport.PARTIAL -> "Partly confirmed"
+            ClaimSupport.UNCHECKED -> "Not checked"
+        }
+        if (caution != null) {
             Text(
-                "Partly confirmed" + (claim.note?.let { ": $it" } ?: ""),
+                caution + (claim.note?.let { ": $it" } ?: ""),
                 style = MaterialTheme.typography.labelMedium,
                 color = cautionColor(),
                 modifier = Modifier.padding(top = 2.dp),

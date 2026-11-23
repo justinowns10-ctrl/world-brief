@@ -22,7 +22,7 @@ class NarrationScriptTest {
     )
 
     private val briefing = Briefing(
-        BriefingSummary("2026-11-23", "2026-11-23", "2026-11-23T13:00:00Z", "World Brief", "Overview.", true, emptyList(), 3, false),
+        BriefingSummary("2026-11-23", "2026-11-23", "2026-11-23T13:00:00Z", "World Brief", "Overview.", true, emptyList(), false, emptyList(), 3, false),
         listOf(story("b", Section.AFRICA), story("a", Section.EUROPE), story("c", Section.EUROPE, StoryStatus.DISPUTED, "Accounts differ")),
     )
 

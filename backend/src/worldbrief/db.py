@@ -38,7 +38,8 @@ CREATE TABLE IF NOT EXISTS claim_audit (
 );
 CREATE TABLE IF NOT EXISTS briefings (
     id TEXT PRIMARY KEY, generated_at TEXT NOT NULL, title TEXT NOT NULL,
-    story_count INTEGER NOT NULL, is_demo INTEGER NOT NULL, json TEXT NOT NULL
+    story_count INTEGER NOT NULL, is_demo INTEGER NOT NULL, json TEXT NOT NULL,
+    state TEXT NOT NULL DEFAULT 'complete'
 );
 """
 
@@ -54,6 +55,10 @@ def connect(path: str | Path) -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
     conn.executescript(SCHEMA)
+    columns = {r["name"] for r in conn.execute("PRAGMA table_info(briefings)")}
+    if "state" not in columns:   # databases created before publication states existed
+        conn.execute("ALTER TABLE briefings ADD COLUMN state TEXT NOT NULL DEFAULT 'complete'")
+        conn.commit()
     return conn
 
 
@@ -87,6 +92,11 @@ def sources_by_id(conn) -> dict[str, dict]:
 
 
 def start_run(conn, briefing_id: str) -> int:
+    # A run still marked as running here was interrupted (crash, power loss, killed process).
+    conn.execute(
+        "UPDATE runs SET status='failed', finished_at=?, stats=? WHERE status='running'",
+        (now_iso(), json.dumps({"failure": "interrupted before it finished"})),
+    )
     cur = conn.execute(
         "INSERT INTO runs(briefing_id,started_at,status) VALUES(?,?,?)", (briefing_id, now_iso(), "running")
     )
@@ -118,12 +128,13 @@ def audit_claim(conn, run_id: int, headline: str, text: str, verdict: str, publi
 
 def save_briefing(conn, briefing: dict) -> None:
     conn.execute(
-        "INSERT INTO briefings(id,generated_at,title,story_count,is_demo,json) VALUES(?,?,?,?,?,?) "
+        "INSERT INTO briefings(id,generated_at,title,story_count,is_demo,json,state) VALUES(?,?,?,?,?,?,?) "
         "ON CONFLICT(id) DO UPDATE SET generated_at=excluded.generated_at,title=excluded.title,"
-        "story_count=excluded.story_count,is_demo=excluded.is_demo,json=excluded.json",
+        "story_count=excluded.story_count,is_demo=excluded.is_demo,json=excluded.json,state=excluded.state",
         (
             briefing["id"], briefing["generatedAt"], briefing["title"], len(briefing["stories"]),
             int(bool(briefing.get("isDemo", False))), json.dumps(briefing, ensure_ascii=False),
+            (briefing.get("publication") or {}).get("state", "complete"),
         ),
     )
     conn.commit()
@@ -131,11 +142,11 @@ def save_briefing(conn, briefing: dict) -> None:
 
 def list_briefings(conn) -> list[dict]:
     rows = conn.execute(
-        "SELECT id, generated_at, title, story_count, is_demo FROM briefings ORDER BY id DESC"
+        "SELECT id, generated_at, title, story_count, is_demo, state FROM briefings ORDER BY id DESC"
     ).fetchall()
     return [
         {"id": r["id"], "date": r["id"], "generatedAt": r["generated_at"], "title": r["title"],
-         "storyCount": r["story_count"], "isDemo": bool(r["is_demo"])}
+         "storyCount": r["story_count"], "isDemo": bool(r["is_demo"]), "state": r["state"]}
         for r in rows
     ]
 
@@ -143,3 +154,21 @@ def list_briefings(conn) -> list[dict]:
 def get_briefing(conn, briefing_id: str) -> dict | None:
     row = conn.execute("SELECT json FROM briefings WHERE id=?", (briefing_id,)).fetchone()
     return json.loads(row["json"]) if row else None
+
+
+RUN_STATES = {"running": "pending", "complete": "complete", "partial": "partial", "failed": "failed"}
+
+
+def latest_run_status(conn) -> dict:
+    """State of the most recent run, in the four publication states:
+    pending (running, or no run yet), complete, partial, failed."""
+    row = conn.execute("SELECT * FROM runs ORDER BY id DESC LIMIT 1").fetchone()
+    if row is None:
+        return {"state": "pending", "date": None, "startedAt": None, "finishedAt": None, "reasons": [],
+                "briefingAvailable": False}
+    stats = json.loads(row["stats"]) if row["stats"] else {}
+    reasons = ([stats["failure"]] if stats.get("failure") else []) + list(stats.get("reasons") or [])
+    available = conn.execute("SELECT 1 FROM briefings WHERE id=?", (row["briefing_id"],)).fetchone() is not None
+    return {"state": RUN_STATES.get(row["status"], "failed"), "date": row["briefing_id"],
+            "startedAt": row["started_at"], "finishedAt": row["finished_at"], "reasons": reasons,
+            "briefingAvailable": available}

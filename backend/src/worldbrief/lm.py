@@ -72,6 +72,7 @@ class LMStudioClient:
         self.max_calls = max_calls
         self.calls = 0
         self.total_seconds = 0.0
+        self.call_log: list[dict] = []   # one entry per request: task, seconds, ok, tokens
         self._client = httpx.Client(base_url=cfg.base_url.rstrip("/"), timeout=cfg.request_timeout_s, transport=transport)
 
     def list_models(self) -> list[str]:
@@ -101,19 +102,30 @@ class LMStudioClient:
                 raise BudgetExceeded(f"model call budget of {self.max_calls} used up")
             self.calls += 1
             started = time.monotonic()
+            record = {"task": task, "ok": False, "prompt_chars": len(system) + len(user)}
             try:
                 response = self._client.post("/chat/completions", json=payload)
                 response.raise_for_status()
-                content = response.json()["choices"][0]["message"]["content"]
+                body = response.json()
+                usage = body.get("usage") or {}
+                record.update(prompt_tokens=usage.get("prompt_tokens"), completion_tokens=usage.get("completion_tokens"))
+                if isinstance(body.get("stats"), dict):
+                    record["server_stats"] = body["stats"]
+                content = body["choices"][0]["message"]["content"]
                 value = parse_json_reply(content)
                 jsonschema.validate(value, schema)
+                record["ok"] = True
                 return value
-            except (httpx.HTTPError, KeyError, IndexError, ValueError, jsonschema.ValidationError) as exc:
+            except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError, jsonschema.ValidationError) as exc:
                 last = exc
+                record["error"] = f"{type(exc).__name__}: {str(exc)[:160]}"
                 log.warning("%s: attempt %d failed: %s", task, attempt + 1, str(exc)[:200])
-                time.sleep(min(2.0 * (attempt + 1), 10.0))
+                if attempt < cfg.retries:
+                    time.sleep(min(2.0 * (attempt + 1), 10.0))
             finally:
-                self.total_seconds += time.monotonic() - started
+                record["seconds"] = round(time.monotonic() - started, 3)
+                self.call_log.append(record)
+                self.total_seconds += record["seconds"]
                 if cfg.cooldown_s > 0:
                     time.sleep(cfg.cooldown_s)
         raise LMError(f"{task}: failed after {cfg.retries + 1} attempts: {last}")

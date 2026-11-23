@@ -22,6 +22,8 @@ feeds -> ingest -> dedupe -> cluster -> rank -> summarize -> validate -> publish
 | `backend/` | Python package `worldbrief`: pipeline, SQLite storage, FastAPI, command line. |
 | `android/` | Kotlin + Jetpack Compose app. |
 | `docs/` | Architecture, decisions, status, review notes. |
+| `reports/` | Test output and, once run on the desktop, build logs and the real-run report. |
+| `scripts/` | `verify_windows.ps1`: collects verification evidence on the desktop. |
 | `.github/workflows/ci.yml` | Runs backend tests and builds the Android debug APK. |
 
 ## Backend quick start (Windows PowerShell)
@@ -33,7 +35,7 @@ cd backend
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -e ".[dev]"
-python -m pytest -q                      # 13 tests, no network or model needed
+python -m pytest -q                      # 60 tests, no outside network or model needed
 
 copy config.example.toml config.toml     # then set lmstudio.chat_model
 python -m worldbrief check-lm            # confirms LM Studio's server answers, lists models
@@ -42,6 +44,20 @@ python -m worldbrief status              # last run: log, and every claim that w
 
 $env:WORLDBRIEF_API_TOKEN = python -m worldbrief token
 python -m worldbrief serve               # http://127.0.0.1:8000
+```
+
+Checks and measurements:
+
+```powershell
+python -m worldbrief check-feeds --report ..\reports\feeds.json     # every feed, once, against the live site
+pip install psutil                                                    # optional: system memory in the report
+python -m worldbrief run --report ..\reports\real-run.json          # a run, plus model details, timings, peak memory, removed claims
+```
+
+Or collect everything, including the Android build log, in one go from the repository root:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\verify_windows.ps1
 ```
 
 To try everything without LM Studio:
@@ -79,6 +95,7 @@ the APK and attaches it to the run as `worldbrief-debug-apk`.
 | Method | Path | Auth | Returns |
 |---|---|---|---|
 | GET | `/v1/health` | none | status and versions |
-| GET | `/v1/briefings` | bearer | `{ "briefings": [ {id, date, generatedAt, title, storyCount, isDemo} ] }` |
+| GET | `/v1/status` | bearer | state of the latest run: `pending`, `complete`, `partial` or `failed`, with reasons |
+| GET | `/v1/briefings` | bearer | `{ "briefings": [ {id, date, generatedAt, title, storyCount, isDemo, state} ] }` |
 | GET | `/v1/briefings/latest` | bearer | a briefing (contract v1) |
 | GET | `/v1/briefings/{YYYY-MM-DD}` | bearer | a briefing (contract v1) |

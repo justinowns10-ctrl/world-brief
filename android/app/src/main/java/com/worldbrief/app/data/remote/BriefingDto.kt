@@ -23,9 +23,17 @@ data class BriefingDto(
     val title: String,
     val overview: String = "",
     val isDemo: Boolean = false,
+    val publication: PublicationDto? = null,
     val coverage: CoverageDto? = null,
     val sources: List<SourceDto> = emptyList(),
     val stories: List<StoryDto> = emptyList(),
+)
+
+/** Absent means complete. "failed" and "pending" describe runs, not briefings, and never appear here. */
+@Serializable
+data class PublicationDto(
+    val state: String = "complete",
+    val reasons: List<String> = emptyList(),
 )
 
 @Serializable

@@ -59,4 +59,15 @@ class DemoDataTest {
         val dto = load(demoFiles().last()).copy(schemaVersion = 99)
         assertTrue(validateBriefing(dto).isNotEmpty())
     }
+
+    @Test
+    fun publicationStateAndUncheckedClaimsSurviveMapping() {
+        val dto = load(demoFiles().last())
+        assertEquals("complete", dto.publication?.state)
+        val partial = dto.copy(publication = com.worldbrief.app.data.remote.PublicationDto("partial", listOf("Budget reached.")))
+        val records = partial.toRecords(nowMillis = 0)
+        assertTrue(records.briefing.isPartial)
+        assertEquals("Budget reached.", records.briefing.partialReasons)
+        assertTrue(!dto.toRecords(nowMillis = 0).briefing.isPartial)
+    }
 }

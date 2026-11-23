@@ -1,54 +1,80 @@
 # Status
 
-Last updated 2026-11-23. Three levels are used and kept apart:
+Last updated 2026-11-23, after Technical Review Directive 01 and ChatGPT's review (WB-001 to WB-007).
+Git: `baseline-0.1` is the code as first delivered; this work is on branch `directive-01`.
 
-- **Verified**: run, with the result observed.
+Three levels are used and kept apart:
+
+- **Verified**: run, with the result observed. Evidence is in `reports/`.
 - **Implemented**: written, not yet run in a way that proves it.
 - **Planned**: not written.
 
+## Not done: the three results the directive asked for first
+
+| Required result | State | Why | What produces it |
+|---|---|---|---|
+| Android Gradle build result and log | **Not obtained** | The environment this was written in cannot download Android libraries, has no GitHub repository attached, and was refused access to the desktop's folders. | `scripts\verify_windows.ps1` on the desktop, or push to GitHub (CI keeps the full log as `android-build-log`). |
+| Real LM Studio model test | **Not obtained** | LM Studio runs on the desktop only. | `python -m worldbrief run --report ..\reports\real-run.json` (the script does this). The report records model id, quantization, load settings, per-call timings, tokens, peak GPU and system memory, and every removed claim. |
+| Windows execution | **Not obtained** | Same. | The script, or the `windows-latest` CI job for the test suite. |
+
+The Android client is **not complete** and must not be described as such until an APK builds.
+
 ## Verified
 
-| What | How it was checked |
+| What | Evidence |
 |---|---|
-| Contract schema and both example briefings | Validated with `jsonschema` (Draft 2020-12). |
-| Backend pipeline end to end on fixture feeds | `pytest`, 13 tests passing on Python 3.13. Local RSS files, rule-based stand-in instead of a model. |
-| Safeguards: fabricated passage reference removed, unsupported claim removed, wrong figure flagged, contradicted claim removed, checker outage downgrades claims | `pytest`, scripted misbehaving model. |
-| One failing feed, one failing event, and the time limit do not lose the run | `pytest`. |
-| LM Studio client request shape, JSON retry, prompt cap, call budget | `pytest` against a mock HTTP server. **Not** against a real LM Studio. |
-| API: token required, list, by date, latest, 404 | `pytest` and a live `uvicorn` run queried with `curl`. |
-| Command line: `run --stand-in`, `load-demo`, `serve`, `status`, `token` | Run by hand on Linux. |
-| Android narration script and date formatting (pure Kotlin) | Compiled with Kotlin 2.0.21 and its three unit tests run with a minimal test runner. |
-| Every Android Kotlin file parses | Kotlin 2.0.21 compiler found no syntax errors. This does not check types or library calls. |
-| Icon drawables | Rendered and looked at. |
+| Backend test suite: 60 tests pass on Linux, Python 3.13 | `reports/backend-pytest-linux.txt` |
+| Contract schema; both example briefings validate | test `test_example_briefings_are_valid` |
+| Publication states: complete, partial, failed, pending, in the briefing, the list, the run record and `GET /v1/status` | `tests/test_states.py` |
+| Model-call budget exhaustion: mid-run (partial), between draft and check (unchecked claims, partial), before any story (failed), zero budget (failed), and that no request is sent past the budget | `tests/test_states.py`, real client code against a fake LM Studio server |
+| A failed run leaves the earlier briefing for that date in place; an interrupted run is recorded as failed | `tests/test_states.py` |
+| Story ids survive regeneration in a different order (WB-004) | `test_story_ids_survive_regeneration_in_a_different_order` |
+| Adversarial verification: wrong weekday, wrong day, unsupported event date, conflicting figures, figure from an uncited passage, denial, negation, added negation, hedge dropped, attribution dropped, reversed term, swapped roles, unstated cause, quote from the wrong article, sentence fragment | `tests/test_adversarial.py` |
+| Verifier unavailable: only word-for-word source sentences are published, labelled `unchecked`; paraphrases, analysis and background are not (WB-001) | `test_unavailable_verifier_publishes_only_word_for_word_claims` and two others |
+| Headline, background and analysis cannot add a figure, name, cause or reversal; analysis needs an explicit model approval (WB-002) | `tests/test_adversarial.py`, narrative section |
+| Instructions planted in an article never reach the model; a model that "obeys" anyway has its claim, headline, analysis and date removed | `test_planted_instruction_never_reaches_the_model_and_its_claim_is_removed` |
+| Feeds: HTTP 404, HTTP 500, timeout, connection refused, HTML page, empty body, binary garbage, truncated XML (partly recovered), undated entries, Atom | `tests/test_feeds.py`, real local HTTP server |
+| `run --report` writes its JSON and Markdown report | test, with the stand-in model |
+| Android: every Kotlin file parses; narration and date unit tests pass | `reports/android-kotlin-syntax-check.txt`. Parse check only, old compiler. Not a build. |
+
+What these tests are not: no test used a real language model or a real news feed. They show the pipeline's rules behave as written. They say nothing about how good a real model's drafts are or how many real claims the rules will wrongly remove.
+
+## Starter feeds against live endpoints
+
+Checked from the build environment with a fetch tool on 2026-11-23:
+
+| Feed | Result |
+|---|---|
+| Al Jazeera | Valid RSS 2.0, 25 items, each with link, title, description and date; newest item under an hour old. |
+| BBC, Deutsche Welle, The Guardian | Could not be checked: the fetch tool blocks these sites. Says nothing about whether they work from the desktop. |
+| France 24 | Could not be checked: the site's robots rules refuse automated fetching of that address. Worth reading their terms before relying on it. |
+| UN News | Request failed with a client error. The address may be wrong or may refuse this tool. |
+
+So one of six is confirmed. `python -m worldbrief check-feeds` on the desktop settles the rest in one command.
 
 ## Implemented, not verified
 
-| What | Why not verified | How to verify |
-|---|---|---|
-| **The Android app as a whole** | The environment it was written in cannot download Android libraries, so no Gradle build has run. Expect some compile errors on the first build. | Android Studio, or push to GitHub and read the `Android build` job. |
-| **Android toolchain versions** (AGP 9.5.1, Gradle 9.6.0, Kotlin 2.4.21, KSP 2.3.13, Compose BOM 2026.11.01, compileSdk 37.1) | Read from official release pages; the combination is untested. | Same build. |
-| Real LM Studio inference | No LM Studio in the build environment. | `worldbrief check-lm`, then `worldbrief run`. |
-| Real feeds | The feed URLs in `config.example.toml` could not be reached from the build environment. | `worldbrief run`, then `worldbrief status`. |
-| Embedding-based clustering | Needs an embedding model in LM Studio. Word-overlap clustering is what the tests exercise. | Set `lmstudio.embedding_model`. |
-| Windows | Backend was run on Linux only. Nothing in it is OS-specific, but it has not run on Windows. | Run the quick start. |
-| App behaviour on a phone: Room, sync, text-to-speech, theme, navigation | Needs a build. | Install the debug APK. |
+| What | How to verify |
+|---|---|
+| The Android app as a whole, and its toolchain versions | A Gradle build. |
+| Android handling of `partial` briefings and `unchecked` claims (DTO, Room columns, screens) | A Gradle build; `DemoDataTest` covers the mapping. |
+| Bookmarks surviving regeneration on the phone | Follows from stable story ids (tested in the backend) and bookmarks being keyed by story id. Needs an on-device check. |
+| Real LM Studio inference; LM Studio model-info lookup (tries `/api/v1/models`, then `/api/v0/models`) | The real-run report. |
+| GPU and memory sampling (`nvidia-smi`, `psutil`) | The real-run report. Neither tool exists in the build environment, so only the "not available" path has run. |
+| `scripts\verify_windows.ps1` | Has never been run. Each step is also listed as a plain command in the README. |
+| Embedding-based clustering | Set `lmstudio.embedding_model`. |
 
-## Planned
+## Known limits of the verification rules
 
-- Model benchmark command: latency, memory, removed-claim rate per model, on a fixed article set.
-- Scheduled daily run (Windows Task Scheduler) and a start-on-boot API.
-- Background sync and new-briefing notification on Android (WorkManager).
-- Foreground playback service with lock-screen controls and audio focus.
-- Remote access (Tailscale or similar) with HTTPS; encrypted token storage on the phone.
-- Reuse of the existing multi-agent project's LM Studio code, once that project is located.
-- Full-text retrieval where an outlet's terms allow it.
-- Search using SQLite full-text index; archive pruning.
+- They establish that a published statement matches its cited source. They cannot establish that the source is right.
+- **Scope changes in number words** are not caught without the model check: "two of the five ministers resigned" rewritten as "the five ministers resigned". A test pins this.
+- Figures and names are compared as text. "Three" against "3" is flagged as a mismatch.
+- The rules are conservative and will remove some true claims: a correct passive rewrite trips the name-order rule; "not" anywhere in the matched source sentence removes a claim that lacks it; "may" the month reads as a hedge. Removed claims are listed by `worldbrief status`, so the cost can be measured on real runs.
+- The opposite-term list is a fixed list of about forty pairs.
+- Instruction detection is pattern-based. A planted instruction phrased in a way the patterns miss reaches the model; the claim checks still apply to whatever the model then writes.
+- Analysis ("why it matters") is the weakest field: by nature it is not stated in the sources. It is published only when it adds no figure, name or causal word and the model check explicitly approves it. With a weak checking model, expect it to be mostly absent or occasionally wrong.
+- Wire-copy detection is a pattern match; rewritten wire copy counts as an independent source.
 
-## Known limitations of what exists
+## Planned (unchanged; nothing here was started)
 
-- Summaries can only be as detailed as the excerpts in the feeds, which are often one or two sentences.
-- The checks establish that a statement matches its cited sources. They cannot establish that the sources are correct.
-- Names and figures are matched as text. "Three" in a source and "3" in a claim is flagged as a mismatch (the claim is marked partly confirmed, not removed).
-- Wire-copy detection is a pattern match on agency credits and near-identical text. Rewritten wire copy counts as an independent source.
-- Pausing narration restarts the current story when resumed; Android's speech engine cannot pause mid-sentence.
-- The app stores the access token unencrypted in its private storage.
+Scheduling, background sync and notifications on Android, foreground playback service, remote access with HTTPS, encrypted token storage, reuse of the existing multi-agent project's LM Studio code, a multi-model benchmark command, the app reading `GET /v1/status`.

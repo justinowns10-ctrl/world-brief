@@ -172,6 +172,7 @@ def build(date: str, stories_def: list, overview: str) -> dict:
         "title": "World Brief",
         "overview": overview,
         "isDemo": True,
+        "publication": {"state": "complete", "reasons": [], "events": {"selected": len(stories), "processed": len(stories), "published": len(stories), "skippedUnsupported": 0, "skippedErrors": 0, "unprocessed": 0}},
         "generator": {"pipelineVersion": "demo", "model": None},
         "coverage": {
             "windowStart": f"{y:04d}-{m:02d}-{d - 1:02d}T13:00:00Z",

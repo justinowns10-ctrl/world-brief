@@ -14,6 +14,29 @@
     "title": { "type": "string", "minLength": 1 },
     "overview": { "type": "string" },
     "isDemo": { "type": "boolean", "default": false, "description": "True when the content is demonstration data, not real reporting." },
+    "publication": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["state"],
+      "description": "Whether this briefing is everything the run set out to produce. Absent means complete. A briefing that exists is never pending or failed; those states belong to a run and are reported by GET /v1/status.",
+      "properties": {
+        "state": { "enum": ["complete", "partial"] },
+        "reasons": { "type": "array", "items": { "type": "string" }, "description": "Why a partial briefing is partial." },
+        "events": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "How many events the run selected and what became of them.",
+          "properties": {
+            "selected": { "type": "integer", "minimum": 0 },
+            "processed": { "type": "integer", "minimum": 0 },
+            "published": { "type": "integer", "minimum": 0 },
+            "skippedUnsupported": { "type": "integer", "minimum": 0, "description": "Dropped because no statement survived checking." },
+            "skippedErrors": { "type": "integer", "minimum": 0, "description": "Lost to inference or processing errors." },
+            "unprocessed": { "type": "integer", "minimum": 0, "description": "Never attempted: budget or time ran out." }
+          }
+        }
+      }
+    },
     "generator": {
       "type": "object",
       "additionalProperties": true,
@@ -91,8 +114,8 @@
         "id": { "type": "string", "minLength": 1 },
         "text": { "type": "string", "minLength": 1 },
         "support": {
-          "enum": ["supported", "partial"],
-          "description": "Result of checking the claim against its evidence. Unsupported and contradicted claims are never published."
+          "enum": ["supported", "partial", "unchecked"],
+          "description": "supported: the checks found it borne out by its evidence. partial: only partly borne out; see note. unchecked: the model consistency check could not run; the claim is published only because it is word for word from its source. Unsupported and contradicted claims, and unchecked paraphrases, are never published."
         },
         "note": { "type": ["string", "null"], "description": "Why a claim is only partly supported." },
         "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/evidence" } }

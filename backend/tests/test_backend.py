@@ -38,8 +38,8 @@ def make_config(tmp_path: Path, extra_feeds: list[Feed] | None = None) -> Config
 
 
 def test_schema_copies_match():
-    assert (REPO / "contract" / "briefing.schema.json").read_text() == \
-        (REPO / "backend" / "src" / "worldbrief" / "briefing.schema.json").read_text()
+    assert (REPO / "contract" / "briefing.schema.json").read_text(encoding="utf-8") == \
+        (REPO / "backend" / "src" / "worldbrief" / "briefing.schema.json").read_text(encoding="utf-8")
 
 
 def test_example_briefings_are_valid():
@@ -47,7 +47,7 @@ def test_example_briefings_are_valid():
     examples = sorted((REPO / "contract" / "examples").glob("*.json"))
     assert examples
     for path in examples:
-        briefing = json.loads(path.read_text())
+        briefing = json.loads(path.read_text(encoding="utf-8"))
         validator.validate(briefing)
         for story in briefing["stories"]:
             ids = {a["id"] for a in story["articles"]}
@@ -58,7 +58,7 @@ def test_example_briefings_are_valid():
 def test_android_demo_assets_match_contract_examples():
     assets = REPO / "android" / "app" / "src" / "main" / "assets" / "demo"
     for path in (REPO / "contract" / "examples").glob("*.json"):
-        assert (assets / path.name).read_text() == path.read_text()
+        assert (assets / path.name).read_text(encoding="utf-8") == path.read_text(encoding="utf-8")
 
 
 def test_canonical_url_drops_tracking():
@@ -96,7 +96,8 @@ def test_pipeline_end_to_end_and_api(tmp_path):
     # the broken feed was logged, not fatal
     events = [e["message"] for e in conn.execute("SELECT message FROM run_events WHERE level='error'")]
     assert any("broken" in m for m in events)
-    assert any("could not be read" in n for n in briefing["coverage"]["notes"])
+    assert briefing["publication"]["state"] == "partial"
+    assert any("could not be read" in r for r in briefing["publication"]["reasons"])
 
     headlines = " | ".join(s["headline"] for s in briefing["stories"])
     assert "Old story" not in headlines
@@ -192,11 +193,11 @@ def test_validation_removes_fabricated_and_unsupported_claims():
     assert audit["Flood water covered much of Testport."]["verdict"] == "unsupported"
 
 
-def test_validation_downgrades_when_checker_is_unavailable():
+def test_verbatim_claim_is_labelled_unchecked_when_checker_is_unavailable():
     d = draft(("Officials said 1,200 people left their homes.", ["A1"], "Officials said 1,200 people left their homes."))
     result = validate_event(d, PASSAGES, ScriptedModel(fail=True))
     assert result["checked_by_model"] is False
-    assert result["claims"][0]["support"] == "partial"
+    assert result["claims"][0]["support"] == "unchecked"       # word for word, so publishable but labelled
 
 
 def test_contradicted_claim_is_removed_and_marks_conflict():
@@ -222,13 +223,13 @@ def test_one_failed_event_does_not_stop_the_briefing(tmp_path):
     assert all("treaty" not in s["headline"] for s in briefing["stories"])
 
 
-def test_time_limit_publishes_partial_briefing(tmp_path):
+def test_time_limit_before_any_story_is_a_failed_run(tmp_path):
     cfg = make_config(tmp_path)
     cfg.limits.max_run_minutes = 0
     conn = db.connect(cfg.resolve(cfg.paths.database))
     assert run_pipeline(cfg, StandInModel(), conn, briefing_date="2026-11-23", now=NOW) is None
-    run = conn.execute("SELECT status FROM runs ORDER BY id DESC LIMIT 1").fetchone()
-    assert run["status"] == "empty"
+    assert db.latest_run_status(conn)["state"] == "failed"
+    assert db.list_briefings(conn) == []
 
 
 def test_lmstudio_client_retries_invalid_json_and_respects_budget():
@@ -248,8 +249,6 @@ def test_lmstudio_client_retries_invalid_json_and_respects_budget():
     cfg = LMStudio(chat_model="test-model", cooldown_s=0, retries=1, max_prompt_chars=200)
     client = LMStudioClient(cfg, max_calls=2, transport=httpx.MockTransport(handler))
     schema = {"type": "object", "required": ["ok"], "properties": {"ok": {"type": "boolean"}}}
-    import worldbrief.lm as lm_module
-    lm_module.time.sleep = lambda s: None
     assert client.chat_json("probe", "system", "u" * 1000, schema) == {"ok": True}
     assert client.calls == 2
     assert seen[0]["model"] == "test-model" and seen[0]["response_format"]["type"] == "json_schema"

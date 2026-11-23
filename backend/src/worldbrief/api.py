@@ -29,6 +29,12 @@ def create_app(db_path: str, token: str) -> FastAPI:
     def health():
         return {"status": "ok", "service": "worldbrief", "version": PIPELINE_VERSION, "schemaVersion": 1}
 
+    @app.get("/v1/status", dependencies=[Depends(require_token)])
+    def status():
+        """State of the latest run: pending, complete, partial or failed."""
+        with lock:
+            return db.latest_run_status(conn)
+
     @app.get("/v1/briefings", dependencies=[Depends(require_token)])
     def briefings():
         with lock:
